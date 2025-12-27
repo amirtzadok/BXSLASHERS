@@ -8,10 +8,16 @@
 
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Arial Black', sans-serif; color: white; text-align: center; touch-action: none; }
+        
+        /* רקע גיבוי */
         #fallback-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('bg.png') no-repeat center center; background-size: cover; z-index: 0; display: block; }
+        
+        /* וידאו מצלמה */
         #video-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; transform: scaleX(-1); display: none; background: black; }
+        
         #game-container { position: relative; width: 100vw; height: 100vh; z-index: 10; display: none; }
         
+        /* מסך פתיחה */
         #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; }
         #character-row { display: flex; justify-content: center; gap: 8px; width: 95%; overflow-x: auto; padding: 20px; margin-bottom: 20px; }
         
@@ -19,18 +25,27 @@
             width: 60px; height: 60px; border-radius: 50%; background-size: cover; 
             border: 3px solid #fff; flex-shrink: 0; position: relative; cursor: pointer; transition: transform 0.2s;
         }
-        .char-preview.selected { border: 5px solid #00ff00; transform: scale(1.2); box-shadow: 0 0 15px #00ff00; }
+        .char-preview.selected { border: 5px solid #00ff00; transform: scale(1.15); box-shadow: 0 0 15px #00ff00; }
         
         .delete-btn { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 12px; cursor: pointer; border: none; }
-        #start-button { padding: 20px 50px; font-size: 35px; cursor: pointer; background: #ff0000; color: white; border: none; border-radius: 15px; font-weight: bold; box-shadow: 0 0 20px #ff0000; }
         
+        /* כפתורי ממשק */
+        .main-btn { padding: 15px 30px; font-size: 22px; cursor: pointer; color: white; border: none; border-radius: 15px; font-weight: bold; transition: 0.3s; margin: 5px; }
+        #start-button { background: #ff0000; box-shadow: 0 0 20px #ff0000; font-size: 32px; }
+        
+        /* כפתורי צד קבועים */
+        .side-btn { position: fixed; z-index: 3000; background: rgba(0,0,0,0.7); border: 2px solid white; color: white; cursor: pointer; font-weight: bold; }
+        #mute-btn { top: 20px; right: 20px; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; }
+        #early-end-btn { top: 20px; left: 20px; border-radius: 10px; padding: 10px 15px; font-size: 14px; }
+        
+        /* כפתור המצלמה הקבוע - ממוקם מתחת ל-End Game */
+        #toggle-cam-btn { top: 75px; left: 20px; border-radius: 10px; padding: 10px 15px; font-size: 13px; background: rgba(50, 50, 50, 0.8); }
+
         .target { position: absolute; width: 115px; height: 115px; border-radius: 50%; background-size: cover; border: 4px solid white; z-index: 20; }
         .particle { position: absolute; width: 8px; height: 8px; background: #ff0000; pointer-events: none; z-index: 60; }
-        .stat-box { font-size: 22px; background: rgba(0,0,0,0.8); padding: 10px 15px; border-radius: 15px; border: 2px solid #ff0000; }
         
+        .stat-box { font-size: 22px; background: rgba(0,0,0,0.8); padding: 10px 15px; border-radius: 15px; border: 2px solid #ff0000; }
         #round-announcer { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 100px; color: #ff0000; z-index: 500; display: none; text-shadow: 0 0 30px black; font-weight: bold; }
-        #mute-btn { position: fixed; top: 20px; right: 20px; z-index: 3000; background: rgba(255,255,255,0.2); border: 2px solid white; color: white; padding: 10px; border-radius: 50%; cursor: pointer; display: none; width: 50px; height: 50px; font-size: 20px; line-height: 30px; }
-        #early-end-btn { position: fixed; top: 20px; left: 20px; z-index: 3000; background: rgba(255, 0, 0, 0.6); border: 2px solid white; color: white; padding: 10px; border-radius: 10px; cursor: pointer; display: none; font-size: 14px; font-weight: bold; }
 
         #end-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 4000; }
         #most-hit-img { width: 140px; height: 140px; border-radius: 50%; border: 5px solid #ff0000; margin: 15px 0; background-size: cover; }
@@ -43,17 +58,19 @@
 <video id="video-bg" autoplay playsinline muted webkit-playsinline></video>
 <canvas id="motion-canvas" style="display:none;"></canvas>
 
-<button id="mute-btn">🔊</button>
-<button id="early-end-btn">End Game</button>
+<button id="mute-btn" class="side-btn" style="display:none;">🔊</button>
+<button id="early-end-btn" class="side-btn" style="display:none;">End Game</button>
+<button id="toggle-cam-btn" class="side-btn" style="display:none;">Turn Off Camera</button>
+
 <div id="round-announcer">3</div>
 
 <div id="start-screen">
-    <h1 style="font-size: 70px; color: #ff0000; text-shadow: 4px 4px #fff; margin-bottom: 5px;">BX SLASHERS</h1>
-    <h2 style="font-size: 25px; color: #fff; margin-bottom: 20px;">Choose Your Slasher</h2>
+    <h1 style="font-size: 75px; color: #ff0000; text-shadow: 4px 4px #fff; margin-bottom: 5px;">BX SLASHERS</h1>
+    <h2 style="font-size: 24px; color: #fff; margin-bottom: 20px;">Choose Your Slasher</h2>
     <div id="character-row"></div>
-    <div style="display:flex; gap:20px;">
-        <button id="start-button">Slash BX!</button>
-        <button onclick="document.getElementById('upload-modal').style.display='block'" style="padding:15px; cursor:pointer; background:#444; color:white; border-radius:10px; border:none;">Add Slasher</button>
+    <div style="display:flex; flex-direction: column; gap:10px; align-items: center;">
+        <button id="start-button" class="main-btn">Slash BX!</button>
+        <button onclick="document.getElementById('upload-modal').style.display='block'" style="background:none; border:none; color:#aaa; text-decoration:underline; cursor:pointer; font-size: 16px;">Add Slasher</button>
     </div>
 </div>
 
@@ -74,20 +91,20 @@
 </div>
 
 <div id="end-screen">
-    <h1 style="font-size: 50px; color: #ff0000; margin: 0;">BX SLASHERS</h1>
-    <h2>GAME OVER</h2>
+    <h1 style="font-size: 55px; color: #ff0000; margin: 0;">BX SLASHERS</h1>
+    <h2 style="margin: 5px 0;">GAME OVER</h2>
     <div id="most-hit-img"></div>
     <p id="most-hit-text" style="font-size: 20px; margin-bottom:5px;"></p>
     <p id="self-kill-text" style="font-size: 22px; color: #ff0000; font-weight: bold; margin-bottom: 10px;"></p>
     <h2 id="final-total-score" style="font-size: 32px; color: #fff;"></h2>
-    <div style="display:flex; gap:15px; margin-top:15px;">
-        <button onclick="location.reload()" style="padding:15px 25px; cursor:pointer; background:#ff0000; color:white; border-radius:10px; font-weight:bold; border:none;">Play Again</button>
-        <button id="whatsapp-share" style="padding:15px 25px; cursor:pointer; background:#25D366; color:white; border-radius:10px; font-weight:bold; border:none;">Share 📱</button>
+    <div style="display:flex; gap:15px; margin-top:20px;">
+        <button onclick="location.reload()" style="padding:15px 30px; cursor:pointer; background:#ff0000; color:white; border-radius:10px; font-weight:bold; border:none;">Play Again</button>
+        <button id="whatsapp-share" style="padding:15px 30px; cursor:pointer; background:#25D366; color:white; border-radius:10px; font-weight:bold; border:none;">Share 📱</button>
     </div>
 </div>
 
 <script>
-    const gameUrl = "https://amirtzadok.github.io/BXSLASHERS/";
+    const gameUrl = window.location.href;
     let characters = [{name:'ella', url:'ella.png', bonus:true}, {name:'amir', url:'amir.png', bonus:false}, {name:'elad', url:'elad.png', bonus:true}, {name:'shay', url:'shay.png', bonus:false}, {name:'achinoam', url:'achinoam.png', bonus:false}, {name:'einat', url:'einat.png', bonus:false}, {name:'doron', url:'doron.png', bonus:true}, {name:'hadas', url:'hadas.png', bonus:false}, {name:'adi', url:'adi.png', bonus:true}, {name:'idan', url:'idan.png', bonus:true}, {name:'shoval', url:'shoval.png', bonus:false}, {name:'stas', url:'stas.png', bonus:false}, {name:'vik', url:'vik.png', bonus:false}, {name:'vivi', url:'vivi.png', bonus:false}];
     
     let hitCount = {};
@@ -95,29 +112,52 @@
     let spawnRate = 1200, moveDuration = 4000, mainInterval;
     let selectedSlasher = 'amir';
     let selfKills = 0;
+    let cameraActive = false;
     
     const video = document.getElementById('video-bg'), canvas = document.getElementById('motion-canvas'), ctx = canvas.getContext('2d'), bgMusic = document.getElementById('bg-music');
 
-    async function initGame() {
-        bgMusic.currentTime = 0;
-        bgMusic.play().catch(e => console.log("Music play blocked"));
+    // פונקציית שליטה במצלמה
+    document.getElementById('toggle-cam-btn').onclick = function() {
+        if (!video.srcObject) {
+            startCamera(); // ניסיון להפעיל אם לא הופעל קודם
+        } else {
+            cameraActive = !cameraActive;
+            video.style.display = cameraActive ? 'block' : 'none';
+            this.innerText = cameraActive ? 'Turn Off Camera' : 'Turn On Camera';
+        }
+    };
 
+    async function startCamera() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { width: 640, height: 480, facingMode: "user" }
+                video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" }
             });
             video.srcObject = stream;
             video.style.display = 'block';
+            cameraActive = true;
+            document.getElementById('toggle-cam-btn').innerText = 'Turn Off Camera';
             await video.play();
             canvas.width = 160; canvas.height = 120;
         } catch(e) {
-            console.error("Camera error:", e);
+            console.error("Camera access error:", e);
+            cameraActive = false;
+            document.getElementById('toggle-cam-btn').innerText = 'Turn On Camera';
         }
+    }
 
+    async function initGame() {
+        bgMusic.currentTime = 0;
+        bgMusic.play().catch(e => console.log("Music blocked"));
+
+        // הפעלת ממשק כפתורים קבוע
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
         document.getElementById('mute-btn').style.display = 'block';
         document.getElementById('early-end-btn').style.display = 'block';
+        document.getElementById('toggle-cam-btn').style.display = 'block';
+
+        // בקשת מצלמה (כרום עשוי לחסום אם לא היתה אינטראקציה)
+        await startCamera();
 
         const announcer = document.getElementById('round-announcer');
         announcer.style.display = 'block';
@@ -138,10 +178,14 @@
         gameActive = true;
         startRound(1);
         mainTimer();
-        if (video.srcObject) updateFrame();
+        updateFrame();
     }
 
-    function playSlashSound() {
+    function slash(el) {
+        if (el.dataset.hit === "true") return; el.dataset.hit = "true";
+        const rect = el.getBoundingClientRect(); createExplosion(rect.left + rect.width/2, rect.top + rect.height/2);
+        
+        // צליל פיצוץ (ווליום 1.0)
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
@@ -152,19 +196,10 @@
         gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-    }
-
-    function slash(el) {
-        if (el.dataset.hit === "true") return; el.dataset.hit = "true";
-        const rect = el.getBoundingClientRect(); createExplosion(rect.left + rect.width/2, rect.top + rect.height/2);
-        playSlashSound();
         
         const charName = el.dataset.name;
         hitCount[charName] = (hitCount[charName] || 0) + 1;
-        
-        if (charName === selectedSlasher) {
-            selfKills++;
-        }
+        if (charName === selectedSlasher) selfKills++;
 
         const char = characters.find(c => c.name === charName);
         score += char && char.bonus ? 3 : 1;
@@ -197,7 +232,10 @@
     }
 
     function updateFrame() {
-        if (!gameActive || video.style.display === 'none') return;
+        if (!gameActive || !cameraActive) {
+            requestAnimationFrame(updateFrame);
+            return;
+        }
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height); const cur = ctx.getImageData(0,0,canvas.width,canvas.height).data;
         if (prevFrameData) {
             document.querySelectorAll('.target').forEach(t => {
@@ -214,7 +252,7 @@
 
     function showEndScreen() {
         document.getElementById('game-container').style.display = 'none';
-        document.getElementById('early-end-btn').style.display = 'none';
+        document.querySelectorAll('.side-btn').forEach(b => b.style.display = 'none');
         document.getElementById('end-screen').style.display = 'flex';
         
         let mostHitName = Object.keys(hitCount).reduce((a, b) => hitCount[a] > hitCount[b] ? a : b, characters[0].name);
@@ -238,15 +276,20 @@
             const div = document.createElement('div');
             div.className = 'char-preview' + (char.name === selectedSlasher ? ' selected' : '');
             div.style.backgroundImage = `url('${char.url}')`;
-            div.onclick = () => {
-                selectedSlasher = char.name;
-                renderCharacterRow();
-            };
+            div.onclick = () => { selectedSlasher = char.name; renderCharacterRow(); };
             const del = document.createElement('button');
             del.className = 'delete-btn'; del.innerText = '×';
             del.onclick = (e) => { e.stopPropagation(); characters.splice(idx,1); renderCharacterRow(); };
             div.appendChild(del); row.appendChild(div);
         });
+    }
+
+    function saveNewCharacter() {
+        const name = document.getElementById('new-name').value; const file = document.getElementById('new-file').files[0];
+        if(!name || !file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => { characters.push({name: name, url: e.target.result, bonus: false}); renderCharacterRow(); document.getElementById('upload-modal').style.display = 'none'; };
+        reader.readAsDataURL(file);
     }
 
     window.onload = renderCharacterRow;
