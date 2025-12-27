@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <title>BX SLASHERS</title>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Arial Black', sans-serif; color: white; text-align: center; touch-action: none; }
+        
+        /* רקע המשחק - וידאו או תמונה */
+        #video-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; transform: scaleX(-1); display: none; }
+        #fallback-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('bg.jpg') no-repeat center center; background-size: cover; z-index: 0; display: block; }
+
+        #game-container { position: relative; width: 100vw; height: 100vh; z-index: 10; display: none; }
+        
+        #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; }
+        #character-row { display: flex; justify-content: center; gap: 8px; width: 95%; overflow-x: auto; padding: 20px; margin-bottom: 30px; }
+        .char-preview { width: 55px; height: 55px; border-radius: 50%; background-size: cover; border: 2px solid #fff; flex-shrink: 0; position: relative; }
+        .delete-btn { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 12px; cursor: pointer; border: none; }
+
+        .btn-group { display: flex; gap: 20px; }
+        #start-button { padding: 20px 50px; font-size: 35px; cursor: pointer; background: #ff0000; color: white; border: none; border-radius: 15px; font-weight: bold; box-shadow: 0 0 20px #ff0000; }
+        #add-button { padding: 20px 30px; font-size: 20px; cursor: pointer; background: #444; color: white; border: 2px solid #fff; border-radius: 15px; }
+
+        .target { position: absolute; width: 115px; height: 115px; border-radius: 50%; background-size: cover; border: 4px solid white; z-index: 20; }
+        .particle { position: absolute; width: 8px; height: 8px; background: #ff0000; pointer-events: none; z-index: 60; }
+        
+        #ui-layer { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: space-around; pointer-events: none; }
+        .stat-box { font-size: 25px; background: rgba(0,0,0,0.8); padding: 10px 20px; border-radius: 15px; border: 2px solid #ff0000; }
+        
+        #round-announcer { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 120px; color: #ff0000; z-index: 500; display: none; text-shadow: 0 0 30px black; font-weight: bold; }
+        
+        /* כפתורי צד מרחפים - End Game בצד שמאל */
+        #mute-btn { position: fixed; top: 20px; right: 20px; z-index: 3000; background: rgba(255,255,255,0.2); border: 2px solid white; color: white; padding: 10px; border-radius: 50%; cursor: pointer; display: none; width: 50px; height: 50px; font-size: 20px; }
+        #early-end-btn { position: fixed; top: 20px; left: 20px; z-index: 3000; background: rgba(255, 0, 0, 0.6); border: 2px solid white; color: white; padding: 10px; border-radius: 10px; cursor: pointer; display: none; font-size: 14px; font-weight: bold; }
+
+        #end-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 4000; box-sizing: border-box; }
+        #most-hit-img { width: 150px; height: 150px; border-radius: 50%; border: 5px solid #ff0000; margin: 20px 0; background-size: cover; }
+        
+        .end-btn-group { display: flex; gap: 15px; margin-top: 25px; }
+        .share-btn { padding: 15px 30px; font-size: 20px; cursor: pointer; background: #25D366; color: white; border: none; border-radius: 10px; font-weight: bold; }
+        .play-again-btn { padding: 15px 30px; font-size: 20px; cursor: pointer; background: #ff0000; color: white; border: none; border-radius: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<audio id="bg-music" src="Final Girl Glitch.mp3"></audio>
+<div id="fallback-bg"></div> <video id="video-bg" autoplay playsinline muted></video>
+<canvas id="motion-canvas" style="display:none;"></canvas>
+
+<button id="mute-btn">🔊</button>
+<button id="early-end-btn">End Game</button>
+
+<div id="round-announcer">3</div>
+
+<div id="start-screen">
+    <h1 style="font-size: 80px; color: #ff0000; text-shadow: 4px 4px #fff; margin-bottom: 20px;">BX SLASHERS</h1>
+    <div id="character-row"></div>
+    <div class="btn-group">
+        <button id="start-button">Slash BX!</button>
+        <button id="add-button">Add Slasher</button>
+    </div>
+</div>
+
+<div id="game-container">
+    <div id="ui-layer">
+        <div class="stat-box">Score: <span id="score-board">0</span></div>
+        <div class="stat-box">Round: <span id="round-num">1</span></div>
+        <div class="stat-box">Time: <span id="timer">60</span></div>
+    </div>
+</div>
+
+<div id="end-screen">
+    <h1 style="font-size: 60px; color: #ff0000; text-shadow: 2px 2px #fff; margin: 0;">BX SLASHERS</h1>
+    <h2 style="color: #fff; margin: 10px 0;">GAME OVER</h2>
+    <div id="most-hit-img"></div>
+    <p id="most-hit-text" style="font-size: 22px; max-width: 80%; line-height: 1.4; color: #ddd;"></p>
+    <h2 id="final-total-score" style="font-size: 36px; color: #ff0000;"></h2>
+    
+    <div class="end-btn-group">
+        <button class="play-again-btn" onclick="location.reload()">Play Again</button>
+        <button class="share-btn" id="whatsapp-share">Share on WhatsApp 📱</button>
+    </div>
+</div>
+
+<script>
+    let characters = [
+        {name:'ella', url:'ella.png', bonus:true}, {name:'amir', url:'amir.png', bonus:false},
+        {name:'elad', url:'elad.png', bonus:true}, {name:'shay', url:'shay.png', bonus:false},
+        {name:'achinoam', url:'achinoam.png', bonus:false}, {name:'einat', url:'einat.png', bonus:false},
+        {name:'doron', url:'doron.png', bonus:true}, {name:'hadas', url:'hadas.png', bonus:false},
+        {name:'adi', url:'adi.png', bonus:true}, {name:'idan', url:'idan.png', bonus:true},
+        {name:'shoval', url:'shoval.png', bonus:false}, {name:'stas', url:'stas.png', bonus:false},
+        {name:'vik', url:'vik.png', bonus:false}, {name:'vivi', url:'vivi.png', bonus:false}
+    ];
+
+    let hitCount = {};
+    let score = 0, totalTime = 60, songElapsed = 0, gameActive = false, currentRound = 0, prevFrameData = null;
+    let spawnRate = 1200, moveDuration = 4000;
+    let mainInterval;
+    
+    const video = document.getElementById('video-bg'), canvas = document.getElementById('motion-canvas'), ctx = canvas.getContext('2d');
+    const bgMusic = document.getElementById('bg-music');
+    const muteBtn = document.getElementById('mute-btn');
+    const earlyEndBtn = document.getElementById('early-end-btn');
+    const announcer = document.getElementById('round-announcer');
+
+    muteBtn.addEventListener('click', () => {
+        bgMusic.muted = !bgMusic.muted;
+        muteBtn.innerText = bgMusic.muted ? "🔇" : "🔊";
+    });
+
+    earlyEndBtn.addEventListener('click', () => {
+        finishGameManually();
+    });
+
+    function playSlashSound() {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function createExplosion(x, y) {
+        for (let i = 0; i < 12; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = x + 'px'; p.style.top = y + 'px';
+            document.body.appendChild(p);
+            const angle = Math.random() * Math.PI * 2;
+            const vel = Math.random() * 10 + 5;
+            p.animate([{transform: 'translate(0,0) scale(1)', opacity: 1}, {transform: `translate(${Math.cos(angle)*vel*18}px, ${Math.sin(angle)*vel*18}px) scale(0)`, opacity: 0}], {duration: 500}).onfinish = () => p.remove();
+        }
+    }
+
+    function slash(el) {
+        if (el.dataset.hit === "true") return;
+        el.dataset.hit = "true";
+        const rect = el.getBoundingClientRect();
+        createExplosion(rect.left + rect.width/2, rect.top + rect.height/2);
+        playSlashSound();
+        const charName = el.dataset.name;
+        hitCount[charName] = (hitCount[charName] || 0) + 1;
+        const char = characters.find(c => c.name === charName);
+        score += char && char.bonus ? 3 : 1;
+        document.getElementById('score-board').innerText = score;
+        el.remove();
+    }
+
+    async function initGame() {
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        muteBtn.style.display = 'block';
+        earlyEndBtn.style.display = 'block';
+        
+        announcer.style.display = 'block';
+        let count = 3;
+        announcer.innerText = count;
+        
+        const countInt = setInterval(() => {
+            count--;
+            if (count > 0) {
+                announcer.innerText = count;
+            } else {
+                clearInterval(countInt);
+                announcer.style.display = 'none';
+                startGameLogic();
+            }
+        }, 1000);
+    }
+
+    async function startGameLogic() {
+        bgMusic.currentTime = 0;
+        bgMusic.play();
+        
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            video.style.display = 'block';
+            video.onloadedmetadata = () => {
+                canvas.width = 160; canvas.height = 120;
+                gameActive = true;
+                startRound(1);
+                mainTimer();
+                updateFrame();
+            };
+        } catch(e) {
+            console.warn("Camera access denied, playing with background image.");
+            gameActive = true;
+            startRound(1);
+            mainTimer();
+        }
+    }
+
+    function mainTimer() {
+        mainInterval = setInterval(() => {
+            if (!gameActive) { clearInterval(mainInterval); return; }
+            songElapsed++;
+            document.getElementById('timer').innerText = 60 - songElapsed;
+
+            if (songElapsed === 14) startRound(2);
+            else if (songElapsed === 35) startRound(3);
+
+            if(songElapsed >= 60) {
+                finishGameManually();
+            }
+        }, 1000);
+    }
+
+    function finishGameManually() {
+        gameActive = false;
+        clearInterval(mainInterval);
+        bgMusic.pause();
+        showEndScreen();
+    }
+
+    function startRound(num) {
+        currentRound = num;
+        document.getElementById('round-num').innerText = num;
+        if (num === 1) { spawnRate = 1200; moveDuration = 4000; }
+        if (num === 2) { spawnRate = 750; moveDuration = 3000; }
+        if (num === 3) { spawnRate = 450; moveDuration = 2200; }
+        
+        announcer.innerText = `ROUND ${num}`;
+        announcer.style.display = 'block';
+        setTimeout(() => announcer.style.display = 'none', 1500);
+        spawnLoop();
+    }
+
+    function spawnLoop() {
+        if (!gameActive) return;
+        createTarget();
+        if (currentRound >= 2 && Math.random() > 0.5) createTarget();
+        setTimeout(spawnLoop, spawnRate);
+    }
+
+    function createTarget() {
+        const char = characters[Math.floor(Math.random() * characters.length)];
+        const t = document.createElement('div');
+        t.className = 'target';
+        t.dataset.name = char.name;
+        t.style.backgroundImage = `url('${char.url}')`;
+        t.onmouseenter = () => slash(t);
+        t.onmousedown = () => slash(t);
+        t.ontouchstart = (e) => { e.preventDefault(); slash(t); };
+        const sides = [{x:Math.random()*80,y:-15},{x:105,y:Math.random()*80},{x:Math.random()*80,y:105},{x:-15,y:Math.random()*80}];
+        const s = sides[Math.floor(Math.random()*4)];
+        t.style.left = s.x+'%'; t.style.top = s.y+'%';
+        document.getElementById('game-container').appendChild(t);
+        t.animate([{left:s.x+'%', top:s.y+'%'}, {left:Math.random()*100+'%', top:Math.random()*100+'%'}], {duration:moveDuration}).onfinish = () => { if(t.parentNode) t.remove(); };
+    }
+
+    function updateFrame() {
+        if (!gameActive || video.style.display === 'none') return;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const cur = ctx.getImageData(0,0,canvas.width,canvas.height).data;
+        if (prevFrameData) {
+            document.querySelectorAll('.target').forEach(t => {
+                const rect = t.getBoundingClientRect();
+                const tx = Math.floor((1 - (rect.left + rect.width / 2) / window.innerWidth) * canvas.width);
+                const ty = Math.floor((rect.top + rect.height / 2) / window.innerHeight * canvas.height);
+                if (checkMotion(tx, ty, cur, prevFrameData)) slash(t);
+            });
+        }
+        prevFrameData = cur;
+        requestAnimationFrame(updateFrame);
+    }
+
+    function checkMotion(x,y,cur,prev) {
+        let diff = 0; const r = 10;
+        for(let i=x-r; i<x+r; i+=2) {
+            for(let j=y-r; j<y+r; j+=2) {
+                if(i<0 || i>=canvas.width || j<0 || j>=canvas.height) continue;
+                const idx = (j*canvas.width+i)*4;
+                if(Math.abs(cur[idx]-prev[idx])>25) diff++;
+            }
+        }
+        return diff > 8;
+    }
+
+    function showEndScreen() {
+        document.getElementById('game-container').style.display = 'none';
+        earlyEndBtn.style.display = 'none';
+        muteBtn.style.display = 'none';
+        const screen = document.getElementById('end-screen');
+        screen.style.display = 'flex';
+        
+        let mostHitName = Object.keys(hitCount).reduce((a, b) => hitCount[a] > hitCount[b] ? a : b, characters[0].name);
+        let hits = hitCount[mostHitName] || 0;
+        let charData = characters.find(c => c.name === mostHitName);
+        
+        document.getElementById('most-hit-img').style.backgroundImage = `url('${charData.url}')`;
+        document.getElementById('most-hit-text').innerHTML = `I Guess You Really Like This one..<br>You hit him ${hits} times!`;
+        document.getElementById('final-total-score').innerText = `Total Score: ${score}`;
+
+        document.getElementById('whatsapp-share').onclick = () => {
+            const text = `I just played BX SLASHERS and scored ${score} points! My favorite target was ${mostHitName.toUpperCase()} 💥. Can you beat me?`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+        };
+    }
+
+    function renderCharacterRow() {
+        const row = document.getElementById('character-row');
+        row.innerHTML = '';
+        characters.forEach((char, idx) => {
+            const div = document.createElement('div');
+            div.className = 'char-preview';
+            div.style.backgroundImage = `url('${char.url}')`;
+            const del = document.createElement('button');
+            del.className = 'delete-btn'; del.innerText = '×';
+            del.onclick = (e) => { e.stopPropagation(); characters.splice(idx,1); renderCharacterRow(); };
+            div.appendChild(del); row.appendChild(div);
+            if (!hitCount[char.name]) hitCount[char.name] = 0;
+        });
+    }
+
+    document.getElementById('start-button').onclick = initGame;
+    window.onload = renderCharacterRow;
+</script>
+</body>
+</html>
