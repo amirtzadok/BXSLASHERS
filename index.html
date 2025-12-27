@@ -5,15 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BX SLASHERS</title>
     <link rel="icon" type="image/png" href="icon.png">
-    <meta http-equiv="Permissions-Policy" content="camera=(self)">
 
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Arial Black', sans-serif; color: white; text-align: center; touch-action: none; }
-        #fallback-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('bg.png') no-repeat center center; background-size: cover; z-index: 0; display: block; }
-        #video-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; transform: scaleX(-1); display: none; background: black; }
+        
+        /* רקע המשחק הקבוע */
+        #fallback-bg { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: url('bg.png') no-repeat center center; 
+            background-size: cover; z-index: 0; display: block; 
+        }
+        
         #game-container { position: relative; width: 100vw; height: 100vh; z-index: 10; display: none; }
         #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; padding: 20px; box-sizing: border-box; }
         
+        /* עיצוב דסקטופ */
         #main-title { font-size: 85px; color: #ff0000; text-shadow: 5px 5px #fff; margin: 0; text-transform: uppercase; }
         #sub-title { font-size: 28px; color: #fff; margin: 15px 0 25px 0; }
         
@@ -26,7 +32,6 @@
         .side-btn { position: fixed; z-index: 3000; background: rgba(0,0,0,0.7); border: 2px solid white; color: white; cursor: pointer; font-weight: bold; }
         #mute-btn { top: 20px; right: 20px; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; }
         #early-end-btn { top: 20px; left: 20px; border-radius: 10px; padding: 12px 20px; font-size: 15px; }
-        #toggle-cam-btn { top: 85px; left: 20px; border-radius: 10px; padding: 12px 20px; font-size: 14px; background: rgba(50, 50, 50, 0.8); }
         
         .target { position: absolute; width: 115px; height: 115px; border-radius: 50%; background-size: cover; border: 4px solid white; z-index: 20; }
         #round-announcer { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); font-size: 130px; color: #ff0000; z-index: 500; display: none; text-shadow: 0 0 30px black; font-weight: bold; width: 100%; pointer-events: none; }
@@ -39,7 +44,6 @@
             .main-btn { padding: 22px 35px; font-size: 28px; width: 85%; border-radius: 20px; }
             #mute-btn { width: 75px; height: 75px; font-size: 35px; top: 15px; right: 15px; }
             #early-end-btn { font-size: 18px; padding: 15px 25px; top: 15px; left: 15px; }
-            #toggle-cam-btn { font-size: 16px; padding: 15px 25px; top: 90px; left: 15px; }
             .target { width: 125px; height: 125px; }
             #round-announcer { font-size: 85px; }
         }
@@ -55,12 +59,9 @@
 
 <audio id="bg-music" src="Final Girl Glitch.mp3" preload="auto"></audio>
 <div id="fallback-bg"></div>
-<video id="video-bg" autoplay playsinline muted webkit-playsinline></video>
-<canvas id="motion-canvas" style="display:none;"></canvas>
 
 <button id="mute-btn" class="side-btn" style="display:none;">🔊</button>
 <button id="early-end-btn" class="side-btn" style="display:none;">END GAME</button>
-<button id="toggle-cam-btn" class="side-btn" style="display:none;">CAM OFF</button>
 
 <div id="round-announcer">3</div>
 
@@ -101,37 +102,34 @@
     const gameUrl = window.location.href;
     let characters = [{name:'ella', url:'ella.png', bonus:true}, {name:'amir', url:'amir.png', bonus:false}, {name:'elad', url:'elad.png', bonus:true}, {name:'shay', url:'shay.png', bonus:false}, {name:'achinoam', url:'achinoam.png', bonus:false}, {name:'einat', url:'einat.png', bonus:false}, {name:'doron', url:'doron.png', bonus:true}, {name:'hadas', url:'hadas.png', bonus:false}, {name:'adi', url:'adi.png', bonus:true}, {name:'idan', url:'idan.png', bonus:true}, {name:'shoval', url:'shoval.png', bonus:false}, {name:'stas', url:'stas.png', bonus:false}, {name:'vik', url:'vik.png', bonus:false}, {name:'vivi', url:'vivi.png', bonus:false}];
     
-    let hitCount = {}; let score = 0, songElapsed = 0, gameActive = false, selectedSlasher = 'amir', selfKills = 0, cameraActive = false;
+    let hitCount = {}; let score = 0, songElapsed = 0, gameActive = false, selectedSlasher = 'amir', selfKills = 0;
     let spawnRate = 1200, moveDuration = 4000, mainInterval;
-    const video = document.getElementById('video-bg'), canvas = document.getElementById('motion-canvas'), ctx = canvas.getContext('2d', { willReadFrequently: true }), bgMusic = document.getElementById('bg-music');
-
-    document.getElementById('toggle-cam-btn').onclick = function() {
-        if (!video.srcObject) { startCamera(); } 
-        else { cameraActive = !cameraActive; video.style.display = cameraActive ? 'block' : 'none'; this.innerText = cameraActive ? 'CAM OFF' : 'CAM ON'; }
-    };
-
-    async function startCamera() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: "user" } });
-            video.srcObject = stream; video.style.display = 'block'; cameraActive = true; document.getElementById('toggle-cam-btn').innerText = 'CAM OFF';
-            await video.play(); canvas.width = 160; canvas.height = 120;
-        } catch(e) { console.error(e); cameraActive = false; document.getElementById('toggle-cam-btn').innerText = 'CAM ON'; }
-    }
+    const bgMusic = document.getElementById('bg-music');
 
     async function initGame() {
-        bgMusic.currentTime = 0; bgMusic.play().catch(e => console.log("Audio blocked"));
+        bgMusic.currentTime = 0; 
+        bgMusic.play().catch(e => console.log("Audio blocked"));
+        
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
         document.getElementById('mute-btn').style.display = 'block';
         document.getElementById('early-end-btn').style.display = 'block';
-        document.getElementById('toggle-cam-btn').style.display = 'block';
-        await startCamera();
-        const announcer = document.getElementById('round-announcer'); announcer.style.display = 'block';
+
+        const announcer = document.getElementById('round-announcer'); 
+        announcer.style.display = 'block';
         let count = 3; announcer.innerText = count;
-        const countInt = setInterval(() => { count--; if (count > 0) announcer.innerText = count; else { clearInterval(countInt); announcer.style.display = 'none'; startGameLogic(); } }, 1000);
+        const countInt = setInterval(() => { 
+            count--; 
+            if (count > 0) announcer.innerText = count; 
+            else { clearInterval(countInt); announcer.style.display = 'none'; startGameLogic(); } 
+        }, 1000);
     }
 
-    function startGameLogic() { gameActive = true; startRound(1); mainTimer(); updateFrame(); }
+    function startGameLogic() { 
+        gameActive = true; 
+        startRound(1); 
+        mainTimer(); 
+    }
 
     function slash(el) {
         if (el.dataset.hit === "true") return; el.dataset.hit = "true";
@@ -162,7 +160,7 @@
     function createTarget() {
         const char = characters[Math.floor(Math.random() * characters.length)]; const t = document.createElement('div');
         t.className = 'target'; t.dataset.name = char.name; t.style.backgroundImage = `url('${char.url}')`;
-        t.onmouseenter = () => slash(t); t.onmousedown = () => slash(t); t.ontouchstart = (e) => { e.preventDefault(); slash(t); };
+        t.onmousedown = () => slash(t); t.ontouchstart = (e) => { e.preventDefault(); slash(t); };
         const sides = [{x:Math.random()*80,y:-15},{x:105,y:Math.random()*80},{x:Math.random()*80,y:105},{x:-15,y:Math.random()*80}];
         const s = sides[Math.floor(Math.random()*4)]; t.style.left = s.x+'%'; t.style.top = s.y+'%';
         document.getElementById('game-container').appendChild(t);
@@ -176,39 +174,6 @@
             const angle = Math.random() * Math.PI * 2, vel = Math.random() * 10 + 5;
             p.animate([{transform: 'translate(0,0) scale(1)', opacity: 1}, {transform: `translate(${Math.cos(angle)*vel*20}px, ${Math.sin(angle)*vel*20}px) scale(0)`, opacity: 0}], {duration: 600}).onfinish = () => p.remove();
         }
-    }
-
-    // לוגיקת זיהוי תנועה משופרת
-    function updateFrame() {
-        if (!gameActive || !cameraActive) { requestAnimationFrame(updateFrame); return; }
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height); const cur = ctx.getImageData(0,0,canvas.width,canvas.height).data;
-        if (prevFrameData) {
-            document.querySelectorAll('.target').forEach(t => {
-                const rect = t.getBoundingClientRect();
-                // חישוב מיקום יחסי רגיש יותר
-                const tx = Math.floor((1 - (rect.left + rect.width / 2) / window.innerWidth) * canvas.width);
-                const ty = Math.floor((rect.top + rect.height / 2) / window.innerHeight * canvas.height);
-                // בדיקה עם רדיוס מוגדל וסף רגישות נמוך יותר
-                if (checkMotion(tx, ty, cur, prevFrameData)) slash(t);
-            });
-        }
-        prevFrameData = cur; requestAnimationFrame(updateFrame);
-    }
-
-    // פונקציית בדיקת תנועה משופרת - רדיוס בדיקה גדול יותר וסף רגישות משופר
-    function checkMotion(x,y,cur,prev) { 
-        let diff = 0; 
-        const r = 15; // רדיוס בדיקה מוגדל מ-10 ל-15
-        for(let i=x-r; i<x+r; i+=2) { 
-            for(let j=y-r; j<y+r; j+=2) { 
-                if(i<0 || i>=canvas.width || j<0 || j>=canvas.height) continue; 
-                const idx = (j*canvas.width+i)*4; 
-                // הורדת סף השינוי מ-25 ל-20 לזיהוי קל יותר
-                if(Math.abs(cur[idx]-prev[idx])>20) diff++; 
-            } 
-        } 
-        // הורדת סף כמות הפיקסלים המשתנים לזיהוי תנועה מהירה יותר
-        return diff > 6; 
     }
 
     function showEndScreen() {
