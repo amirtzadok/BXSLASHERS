@@ -6,17 +6,23 @@
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Arial Black', sans-serif; color: white; text-align: center; touch-action: none; }
         
-        /* רקע גיבוי - תמונת bg.jpg */
-        #fallback-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('bg.jpg') no-repeat center center; background-size: cover; z-index: 0; display: block; }
+        /* רקע גיבוי - תמונת bg.png */
+        #fallback-bg { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: url('bg.png') no-repeat center center; 
+            background-size: cover; z-index: 0; display: block; 
+        }
         
         /* שכבת הוידאו של המצלמה */
         #video-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; transform: scaleX(-1); display: none; }
 
         #game-container { position: relative; width: 100vw; height: 100vh; z-index: 10; display: none; }
         #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; }
+        
         #character-row { display: flex; justify-content: center; gap: 8px; width: 95%; overflow-x: auto; padding: 20px; margin-bottom: 30px; }
         .char-preview { width: 55px; height: 55px; border-radius: 50%; background-size: cover; border: 2px solid #fff; flex-shrink: 0; position: relative; }
         .delete-btn { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 12px; cursor: pointer; border: none; }
+        
         #start-button { padding: 20px 50px; font-size: 35px; cursor: pointer; background: #ff0000; color: white; border: none; border-radius: 15px; font-weight: bold; box-shadow: 0 0 20px #ff0000; }
         
         .target { position: absolute; width: 115px; height: 115px; border-radius: 50%; background-size: cover; border: 4px solid white; z-index: 20; }
@@ -25,7 +31,6 @@
         
         #round-announcer { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 120px; color: #ff0000; z-index: 500; display: none; text-shadow: 0 0 30px black; font-weight: bold; }
         
-        /* כפתורי צד */
         #mute-btn { position: fixed; top: 20px; right: 20px; z-index: 3000; background: rgba(255,255,255,0.2); border: 2px solid white; color: white; padding: 10px; border-radius: 50%; cursor: pointer; display: none; width: 50px; height: 50px; font-size: 20px; }
         #early-end-btn { position: fixed; top: 20px; left: 20px; z-index: 3000; background: rgba(255, 0, 0, 0.6); border: 2px solid white; color: white; padding: 10px; border-radius: 10px; cursor: pointer; display: none; font-size: 14px; font-weight: bold; }
 
@@ -36,9 +41,7 @@
 <body>
 
 <audio id="bg-music" src="Final Girl Glitch.mp3" preload="auto"></audio>
-
 <div id="fallback-bg"></div>
-
 <video id="video-bg" autoplay playsinline muted></video>
 <canvas id="motion-canvas" style="display:none;"></canvas>
 
@@ -78,7 +81,7 @@
     <p id="most-hit-text" style="font-size: 22px; margin-bottom:10px;"></p>
     <h2 id="final-total-score" style="font-size: 36px; color: #ff0000;"></h2>
     <div style="display:flex; gap:15px; margin-top:20px;">
-        <button onclick="restartGame()" style="padding:15px 30px; cursor:pointer; background:#ff0000; color:white; border-radius:10px; font-weight:bold; border:none;">Play Again</button>
+        <button onclick="location.reload()" style="padding:15px 30px; cursor:pointer; background:#ff0000; color:white; border-radius:10px; font-weight:bold; border:none;">Play Again</button>
         <button id="whatsapp-share" style="padding:15px 30px; cursor:pointer; background:#25D366; color:white; border-radius:10px; font-weight:bold; border:none;">Share Score 📱</button>
     </div>
 </div>
@@ -90,73 +93,62 @@
     let spawnRate = 1200, moveDuration = 4000, mainInterval;
     const video = document.getElementById('video-bg'), canvas = document.getElementById('motion-canvas'), ctx = canvas.getContext('2d'), bgMusic = document.getElementById('bg-music');
 
-    // פונקציית התחלת משחק מחדש שתבקש מצלמה שוב
-    function restartGame() {
-        location.reload(); 
-    }
-
     async function initGame() {
-        document.getElementById('start-screen').style.display = 'none'; 
+        // 1. קודם כל מבקשים גישה למצלמה
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            video.style.display = 'block';
+            video.onloadedmetadata = () => {
+                canvas.width = 160; canvas.height = 120;
+            };
+        } catch(e) {
+            console.warn("Camera access denied - Using bg.png as background.");
+        }
+
+        // 2. אחרי הבקשה, מציגים את עמוד המשחק ומתחילים ספירה
+        document.getElementById('start-screen').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
-        
-        bgMusic.currentTime = 0; 
+        bgMusic.currentTime = 0;
         bgMusic.play();
-        
-        document.getElementById('mute-btn').style.display = 'block'; 
+        document.getElementById('mute-btn').style.display = 'block';
         document.getElementById('early-end-btn').style.display = 'block';
-        
-        const announcer = document.getElementById('round-announcer'); 
+
+        const announcer = document.getElementById('round-announcer');
         announcer.style.display = 'block';
         let count = 3; announcer.innerText = count;
-        
-        const countInt = setInterval(() => { 
-            count--; 
-            if (count > 0) announcer.innerText = count; 
-            else { 
-                clearInterval(countInt); 
-                announcer.style.display = 'none'; 
-                startGameLogic(); 
-            } 
+
+        const countInt = setInterval(() => {
+            count--;
+            if (count > 0) announcer.innerText = count;
+            else {
+                clearInterval(countInt);
+                announcer.style.display = 'none';
+                startGameLogic();
+            }
         }, 1000);
     }
 
-    async function startGameLogic() { 
-        gameActive = true; 
-        startRound(1); 
-        mainTimer(); 
-        await setupCameraAndLoop(); 
+    function startGameLogic() {
+        gameActive = true;
+        startRound(1);
+        mainTimer();
+        if (video.srcObject) updateFrame(); // מפעיל זיהוי תנועה רק אם יש מצלמה
     }
 
-    async function setupCameraAndLoop() { 
-        try { 
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true }); 
-            video.srcObject = stream; 
-            video.style.display = 'block'; // הצגת המצלמה על גבי תמונת הרקע
-            video.onloadedmetadata = () => { 
-                canvas.width = 160; canvas.height = 120; 
-                updateFrame(); 
-            }; 
-        } catch(e) { 
-            console.warn("Camera access denied - Using background image only.");
-            // אם אין מצלמה, לא משנים כלום, תמונת ה-fallback תמשיך להופיע
-        } 
-    }
-
-    // פונקציית צליל הפיצוץ המחוזק
     function playSlashSound() {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = 'sawtooth'; 
+        osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(450, audioCtx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
-        gain.gain.setValueAtTime(1.0, audioCtx.currentTime); 
+        gain.gain.setValueAtTime(1.0, audioCtx.currentTime);
         gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + 0.1);
     }
 
-    // שאר הלוגיקה הפנימית של המשחק
     function createExplosion(x, y) {
         for (let i = 0; i < 15; i++) {
             const p = document.createElement('div'); p.className = 'particle';
@@ -215,6 +207,14 @@
         document.getElementById('most-hit-text').innerHTML = `I Guess You Really Like This one..<br>You hit him ${hits} times!`;
         document.getElementById('final-total-score').innerText = `Total Score: ${score}`;
         document.getElementById('whatsapp-share').onclick = () => { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`I scored ${score} points on BX SLASHERS! 💥 My favorite target was ${mostHitName.toUpperCase()}. Beat me here: ${gameUrl}`)}`, '_blank'); };
+    }
+
+    function saveNewCharacter() {
+        const name = document.getElementById('new-name').value; const file = document.getElementById('new-file').files[0];
+        if(!name || !file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => { characters.push({name: name, url: e.target.result, bonus: false}); renderCharacterRow(); document.getElementById('upload-modal').style.display = 'none'; };
+        reader.readAsDataURL(file);
     }
 
     function renderCharacterRow() { const row = document.getElementById('character-row'); row.innerHTML = ''; characters.forEach((char, idx) => { const div = document.createElement('div'); div.className = 'char-preview'; div.style.backgroundImage = `url('${char.url}')`; const del = document.createElement('button'); del.className = 'delete-btn'; del.innerText = '×'; del.onclick = (e) => { e.stopPropagation(); characters.splice(idx,1); renderCharacterRow(); }; div.appendChild(del); row.appendChild(div); }); }
