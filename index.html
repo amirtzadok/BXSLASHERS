@@ -9,7 +9,7 @@
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Arial Black', sans-serif; color: white; text-align: center; touch-action: none; }
         #fallback-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('bg.png') no-repeat center center; background-size: cover; z-index: 0; display: block; }
-        #video-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; transform: scaleX(-1); display: none; }
+        #video-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; transform: scaleX(-1); display: none; background: black; }
         #game-container { position: relative; width: 100vw; height: 100vh; z-index: 10; display: none; }
         #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; }
         #character-row { display: flex; justify-content: center; gap: 8px; width: 95%; overflow-x: auto; padding: 20px; margin-bottom: 30px; }
@@ -30,7 +30,7 @@
 
 <audio id="bg-music" src="Final Girl Glitch.mp3" preload="auto"></audio>
 <div id="fallback-bg"></div>
-<video id="video-bg" autoplay playsinline muted></video>
+<video id="video-bg" autoplay playsinline muted webkit-playsinline></video>
 <canvas id="motion-canvas" style="display:none;"></canvas>
 
 <button id="mute-btn">🔊</button>
@@ -75,25 +75,31 @@
 </div>
 
 <script>
-    const gameUrl = "https://amirtzadok.github.io/BXSLASHERS/";
+    const gameUrl = window.location.href;
     let characters = [{name:'ella', url:'ella.png', bonus:true}, {name:'amir', url:'amir.png', bonus:false}, {name:'elad', url:'elad.png', bonus:true}, {name:'shay', url:'shay.png', bonus:false}, {name:'achinoam', url:'achinoam.png', bonus:false}, {name:'einat', url:'einat.png', bonus:false}, {name:'doron', url:'doron.png', bonus:true}, {name:'hadas', url:'hadas.png', bonus:false}, {name:'adi', url:'adi.png', bonus:true}, {name:'idan', url:'idan.png', bonus:true}, {name:'shoval', url:'shoval.png', bonus:false}, {name:'stas', url:'stas.png', bonus:false}, {name:'vik', url:'vik.png', bonus:false}, {name:'vivi', url:'vivi.png', bonus:false}];
     let hitCount = {}; let score = 0, totalTime = 60, songElapsed = 0, gameActive = false, currentRound = 0, prevFrameData = null;
     let spawnRate = 1200, moveDuration = 4000, mainInterval;
     const video = document.getElementById('video-bg'), canvas = document.getElementById('motion-canvas'), ctx = canvas.getContext('2d'), bgMusic = document.getElementById('bg-music');
 
     async function initGame() {
-        // 1. קודם כל מתחילים מוזיקה ומבקשים מצלמה
         bgMusic.currentTime = 0;
         bgMusic.play().catch(e => console.log("Music play blocked"));
 
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            video.srcObject = stream;
-            video.style.display = 'block';
-            await video.play(); // חשוב עבור דפדפני מובייל
-            canvas.width = 160; canvas.height = 120;
-        } catch(e) {
-            console.error("Camera error:", e);
+        // בקשת מצלמה משופרת
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user" } 
+                });
+                video.srcObject = stream;
+                video.style.display = 'block';
+                // המתנה לטעינת הוידאו
+                await new Promise(resolve => video.onloadedmetadata = resolve);
+                canvas.width = 160; canvas.height = 120;
+            } catch(e) {
+                console.error("Camera error:", e);
+                alert("Please enable camera access for the full experience!");
+            }
         }
 
         document.getElementById('start-screen').style.display = 'none';
