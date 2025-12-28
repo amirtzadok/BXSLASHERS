@@ -39,25 +39,20 @@
         .target { position: absolute; width: 115px; height: 115px; border-radius: 50%; background-size: cover; border: 4px solid white; z-index: 20; }
         #round-announcer { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); font-size: 130px; color: #ff0000; z-index: 500; display: none; text-shadow: 0 0 30px black; font-weight: bold; width: 100%; pointer-events: none; }
 
-        /* Mobile Adjustments */
         @media (max-width: 768px) {
             body { 
                 background: url('bg_mobile.jpg') no-repeat center center fixed !important; 
                 background-size: cover !important; 
             }
             #fallback-bg { display: none !important; }
-            
             #main-title { font-size: 50px; text-shadow: 3px 3px #fff; }
             #sub-title { font-size: 20px; margin: 10px 0; }
             #character-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-height: 40vh; overflow-y: auto; justify-items: center; overflow-x: hidden; }
-            
             #mute-btn { width: 35px; height: 35px; font-size: 16px; top: 10px; right: 10px; }
             #pause-btn { width: 35px; height: 35px; font-size: 16px; top: 10px; right: 55px; }
             #early-end-btn { font-size: 9px; padding: 5px 10px; top: 10px; left: 10px; }
-            
             .target { width: 85px; height: 85px; }
             #round-announcer { font-size: 90px; }
-
             #ui-layer { 
                 bottom: 115px !important; 
                 width: 100% !important;
@@ -84,7 +79,6 @@
         .particle { position: absolute; width: 8px; height: 8px; background: #ff0000; pointer-events: none; z-index: 60; }
         #pause-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 5000; font-size: 40px; color: white; flex-direction: column; }
         
-        /* Specific row handling for the laugh text */
         .laugh-row {
             display: block;
             margin-top: 10px;
@@ -274,9 +268,10 @@
         document.getElementById('end-screen').style.display = 'flex';
         let mostHitName = Object.keys(hitCount).reduce((a, b) => hitCount[a] > hitCount[b] ? a : b, characters[0].name);
         document.getElementById('most-hit-img').style.backgroundImage = `url('${characters.find(c => c.name === mostHitName).url}')`;
-        document.getElementById('most-hit-text').innerHTML = `I Guess You Really Like This one..<br>You hit him ${hitCount[mostHitName] || 0} times!`;
         
-        // Correctly split "ha ha ha" to a new row
+        // Updated text to "Person"
+        document.getElementById('most-hit-text').innerHTML = `I Guess You Really Like This Person..<br>You hit him ${hitCount[mostHitName] || 0} times!`;
+        
         document.getElementById('self-kill-text').innerHTML = `You also Killed Yourself ${selfKills} times <div class="laugh-row">ha ha ha</div>`;
         
         document.getElementById('final-total-score').innerText = `Total Score: ${score}`;
