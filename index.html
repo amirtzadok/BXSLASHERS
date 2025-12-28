@@ -30,7 +30,6 @@
         .char-preview.selected { border: 5px solid #00ff00 !important; transform: scale(1.2); box-shadow: 0 0 20px #00ff00; }
         
         .main-btn { padding: 18px 45px; font-size: 26px; cursor: pointer; color: white; border: none; border-radius: 15px; font-weight: bold; transition: 0.3s; margin: 10px; background: #ff0000; box-shadow: 0 0 25px #ff0000; text-transform: uppercase; }
-        /* עיצוב כפתור כבוי */
         .main-btn:disabled { background: #555; box-shadow: none; cursor: not-allowed; opacity: 0.6; }
         
         .side-btn { position: fixed; z-index: 3000; background: rgba(0,0,0,0.7); border: 2px solid white; color: white; cursor: pointer; font-weight: bold; }
@@ -125,7 +124,6 @@
     
     let characters = [{name:'ella', url:'ella.png', bonus:true}, {name:'amir', url:'amir.png', bonus:false}, {name:'elad', url:'elad.png', bonus:true}, {name:'shay', url:'shay.png', bonus:false}, {name:'achinoam', url:'achinoam.png', bonus:false}, {name:'einat', url:'einat.png', bonus:false}, {name:'doron', url:'doron.png', bonus:true}, {name:'hadas', url:'hadas.png', bonus:false}, {name:'adi', url:'adi.png', bonus:true}, {name:'idan', url:'idan.png', bonus:true}, {name:'shoval', url:'shoval.png', bonus:false}, {name:'stas', url:'stas.png', bonus:false}, {name:'vik', url:'vik.png', bonus:false}, {name:'vivi', url:'vivi.png', bonus:false}];
     
-    // שינוי: selectedSlasher מתחיל כ-null
     let hitCount = {}; let score = 0, songElapsed = 0, gameActive = false, isPaused = false, selectedSlasher = null, selfKills = 0;
     let spawnRate = 1200, moveDuration = 4000, mainInterval;
 
@@ -144,7 +142,7 @@
     }
 
     async function initGame() {
-        if (!selectedSlasher) return; // אבטחה למקרה שהכפתור נלחץ ללא דמות
+        if (!selectedSlasher) return;
         unlockAudio();
         bgMusic.currentTime = 0; 
         bgMusic.play().catch(e => console.log("Audio blocked"));
@@ -250,12 +248,32 @@
         document.getElementById('game-container').style.display = 'none';
         document.querySelectorAll('.side-btn').forEach(b => b.style.display = 'none');
         document.getElementById('end-screen').style.display = 'flex';
-        let mostHitName = Object.keys(hitCount).reduce((a, b) => hitCount[a] > hitCount[b] ? a : b, characters[0].name);
-        document.getElementById('most-hit-img').style.backgroundImage = `url('${characters.find(c => c.name === mostHitName).url}')`;
+        
+        let mostHitName = Object.keys(hitCount).reduce((a, b) => hitCount[a] > hitCount[b] ? a : b, (characters[0] ? characters[0].name : "None"));
+        let mostHitChar = characters.find(c => c.name === mostHitName);
+        if(mostHitChar) document.getElementById('most-hit-img').style.backgroundImage = `url('${mostHitChar.url}')`;
         document.getElementById('most-hit-text').innerHTML = `I Guess You Really Like This Person..<br>You hit him ${hitCount[mostHitName] || 0} times!`;
-        document.getElementById('self-kill-text').innerHTML = `You also Killed Yourself ${selfKills} times <div class="laugh-row">ha ha ha</div>`;
+        
+        // הצגת משפט הריגה עצמית רק אם selfKills גדול מ-0
+        const selfKillEl = document.getElementById('self-kill-text');
+        if (selfKills > 0) {
+            selfKillEl.innerHTML = `You also Killed Yourself ${selfKills} times <div class="laugh-row">ha ha ha</div>`;
+            selfKillEl.style.display = 'block';
+        } else {
+            selfKillEl.style.display = 'none';
+        }
+
         document.getElementById('final-total-score').innerText = `Total Score: ${score}`;
-        document.getElementById('whatsapp-share').onclick = () => { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`I scored ${score} points on BX SLASHERS! 🔪 I even killed myself ${selfKills} times! Beat me here: ${gameUrl}`)}`, '_blank'); };
+        
+        // הגדרת השיתוף לווטסאפ
+        document.getElementById('whatsapp-share').onclick = () => { 
+            let shareMsg = `I scored ${score} points on BX SLASHERS! 🔪 `;
+            if (selfKills > 0) {
+                shareMsg += `I even killed myself ${selfKills} times! `;
+            }
+            shareMsg += `Beat me here: ${gameUrl}`;
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareMsg)}`, '_blank'); 
+        };
     }
 
     function renderCharacterRow() {
@@ -267,7 +285,6 @@
                 unlockAudio(); 
                 playSlash();   
                 selectedSlasher = char.name; 
-                // שינוי: הפעלת הכפתור לאחר בחירה
                 document.getElementById('start-button').disabled = false;
                 renderCharacterRow(); 
             };
