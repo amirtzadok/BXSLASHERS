@@ -41,6 +41,9 @@
         .stat-box { font-size: 20px; background: rgba(0,0,0,0.85); padding: 10px 20px; border-radius: 15px; border: 2px solid #ff0000; min-width: 120px; pointer-events: auto; }
         #ui-layer { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: space-between; padding: 0 40px; box-sizing: border-box; pointer-events: none; z-index: 100; }
 
+        .delete-btn { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 13px; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; z-index: 5; font-weight: bold; }
+        #upload-modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; padding: 30px; border-radius: 20px; border: 3px solid #ff0000; display: none; z-index: 5000; width: 80%; max-width: 420px; }
+
         @media (max-width: 768px) {
             body { background: url('bg_mobile.jpg') no-repeat center center fixed !important; background-size: cover !important; }
             #fallback-bg { display: none !important; }
@@ -97,6 +100,15 @@
     <h2 id="sub-title">CHOOSE YOUR SLASHER</h2>
     <div id="character-row"></div>
     <button id="start-button" class="main-btn" disabled>START GAME</button>
+    <button onclick="document.getElementById('upload-modal').style.display='block'" style="background:none; border:none; color:#aaa; text-decoration:underline; cursor:pointer; font-size: 17px; margin-top: 10px;">Add a Slasher</button>
+</div>
+
+<div id="upload-modal">
+    <h3>ADD A SLASHER</h3>
+    <p style="color: #ccc; font-size: 14px; margin-bottom: 20px;">Choose an image from your device</p>
+    <input type="file" id="new-file" accept="image/*" style="display:block; margin-bottom:20px; width: 100%;">
+    <button onclick="saveNewCharacter()" style="background:red; color:white; padding:15px; border:none; cursor:pointer; font-weight:bold; width:100%; border-radius: 10px;">SAVE</button>
+    <button onclick="document.getElementById('upload-modal').style.display='none'" style="background:#555; color:white; padding:12px; border:none; cursor:pointer; margin-top:10px; width:100%; border-radius: 10px;">CANCEL</button>
 </div>
 
 <div id="game-container">
@@ -126,7 +138,11 @@
     const bgMusic = document.getElementById('bg-music');
     const slashSound = document.getElementById('slash-sound');
     
-    let characters = [{name:'ella', url:'ella.png', bonus:true}, {name:'amir', url:'amir.png', bonus:false}, {name:'elad', url:'elad.png', bonus:true}, {name:'shay', url:'shay.png', bonus:false}, {name:'achinoam', url:'achinoam.png', bonus:false}, {name:'einat', url:'einat.png', bonus:false}, {name:'doron', url:'doron.png', bonus:true}, {name:'hadas', url:'hadas.png', bonus:false}, {name:'adi', url:'adi.png', bonus:true}, {name:'idan', url:'idan.png', bonus:true}, {name:'shoval', url:'shoval.png', bonus:false}, {name:'stas', url:'stas.png', bonus:false}, {name:'vik', url:'vik.png', bonus:false}, {name:'vivi', url:'vivi.png', bonus:false}];
+    const defaultCharacters = [{name:'ella', url:'ella.png', bonus:true, isDefault: true}, {name:'amir', url:'amir.png', bonus:false, isDefault: true}, {name:'elad', url:'elad.png', bonus:true, isDefault: true}, {name:'shay', url:'shay.png', bonus:false, isDefault: true}, {name:'achinoam', url:'achinoam.png', bonus:false, isDefault: true}, {name:'einat', url:'einat.png', bonus:false, isDefault: true}, {name:'doron', url:'doron.png', bonus:true, isDefault: true}, {name:'hadas', url:'hadas.png', bonus:false, isDefault: true}, {name:'adi', url:'adi.png', bonus:true, isDefault: true}, {name:'idan', url:'idan.png', bonus:true, isDefault: true}, {name:'shoval', url:'shoval.png', bonus:false, isDefault: true}, {name:'stas', url:'stas.png', bonus:false, isDefault: true}, {name:'vik', url:'vik.png', bonus:false, isDefault: true}, {name:'vivi', url:'vivi.png', bonus:false, isDefault: true}];
+    
+    // טעינת דמויות מ-localStorage (רק אלו שאינן ברירת מחדל)
+    let customCharacters = JSON.parse(localStorage.getItem('bx_custom_characters')) || [];
+    let characters = [...defaultCharacters, ...customCharacters];
     
     let hitCount = {}; let score = 0, songElapsed = 0, gameActive = false, isPaused = false, selectedSlasher = null, selfKills = 0;
     let spawnRate = 1200, moveDuration = 4000, mainInterval;
@@ -312,8 +328,56 @@
                 document.getElementById('start-button').disabled = false;
                 renderCharacterRow(); 
             };
+            
+            // הוספת כפתור מחיקה רק לדמויות שאינן ברירת מחדל
+            if (!char.isDefault) {
+                const del = document.createElement('button'); del.className = 'delete-btn'; del.innerText = '×';
+                del.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    if (selectedSlasher === char.name) {
+                        selectedSlasher = null;
+                        document.getElementById('start-button').disabled = true;
+                    }
+                    
+                    // מחיקה מהמערכים
+                    customCharacters = customCharacters.filter(c => c.name !== char.name);
+                    characters = [...defaultCharacters, ...customCharacters];
+                    
+                    // עדכון זיכרון
+                    localStorage.setItem('bx_custom_characters', JSON.stringify(customCharacters));
+                    renderCharacterRow(); 
+                };
+                div.appendChild(del);
+            }
+            
             row.appendChild(div);
         });
+    }
+
+    function saveNewCharacter() {
+        const file = document.getElementById('new-file').files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => { 
+            const tempName = "Guest_" + Date.now();
+            const newChar = {name: tempName, url: e.target.result, bonus: false, isDefault: false};
+            
+            customCharacters.push(newChar);
+            characters = [...defaultCharacters, ...customCharacters];
+            
+            try {
+                localStorage.setItem('bx_custom_characters', JSON.stringify(customCharacters));
+            } catch (err) {
+                alert("Storage is full! Please delete some custom slashers first.");
+                customCharacters.pop();
+                return;
+            }
+            
+            renderCharacterRow(); 
+            document.getElementById('upload-modal').style.display = 'none';
+            document.getElementById('new-file').value = ""; 
+        };
+        reader.readAsDataURL(file);
     }
 
     window.onload = renderCharacterRow;
