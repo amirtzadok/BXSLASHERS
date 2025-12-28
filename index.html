@@ -34,7 +34,6 @@
         
         .side-btn { position: fixed; z-index: 3000; background: rgba(0,0,0,0.7); border: 2px solid white; color: white; cursor: pointer; font-weight: bold; }
         #mute-btn { top: 20px; right: 20px; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; }
-        #pause-btn { top: 20px; right: 90px; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; }
         #early-end-btn { top: 20px; left: 20px; border-radius: 10px; padding: 12px 20px; font-size: 15px; }
         
         .target { position: absolute; width: 115px; height: 115px; border-radius: 50%; background-size: cover; border: 4px solid white; z-index: 20; }
@@ -49,7 +48,6 @@
             #sub-title { font-size: 20px; margin: 10px 0; }
             #character-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-height: 40vh; overflow-y: auto; justify-items: center; overflow-x: hidden; }
             #mute-btn { width: 35px; height: 35px; font-size: 16px; top: 10px; right: 10px; }
-            #pause-btn { width: 35px; height: 35px; font-size: 16px; top: 10px; right: 55px; }
             #early-end-btn { font-size: 9px; padding: 5px 10px; top: 10px; left: 10px; }
             .target { width: 85px; height: 85px; }
             #round-announcer { font-size: 90px; }
@@ -72,7 +70,6 @@
 <div id="fallback-bg"></div>
 
 <button id="mute-btn" class="side-btn" style="display:none;">🔊</button>
-<button id="pause-btn" class="side-btn" style="display:none;">⏸</button>
 <button id="early-end-btn" class="side-btn" style="display:none;">END GAME</button>
 
 <div id="pause-overlay">
@@ -126,15 +123,13 @@
     }
 
     function playSlash() {
-        if (!bgMusic.muted) {
-            slashSound.currentTime = 0;
-            slashSound.play().catch(e => console.log("Sound error: ", e));
-        }
+        // צליל ההרג פועל תמיד, ללא קשר למצב ההשתק של המוזיקה
+        slashSound.currentTime = 0;
+        slashSound.play().catch(e => console.log("Sound error: ", e));
     }
 
     // מאזין ללחיצה כפולה לעצירה/חידוש המשחק
     document.body.addEventListener('dblclick', (e) => {
-        // מונע עצירה אם לוחצים על כפתורים או על דמויות
         if (gameActive && !e.target.closest('.main-btn') && !e.target.closest('.target') && !e.target.closest('.side-btn')) {
             togglePause();
         }
@@ -149,7 +144,6 @@
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
         document.getElementById('mute-btn').style.display = 'block';
-        document.getElementById('pause-btn').style.display = 'block';
         document.getElementById('early-end-btn').style.display = 'block';
 
         const announcer = document.getElementById('round-announcer'); 
@@ -173,7 +167,8 @@
             document.querySelectorAll('.target').forEach(t => t.getAnimations().forEach(a => a.pause()));
         } else {
             overlay.style.display = 'none';
-            bgMusic.play();
+            // רק אם המוזיקה לא מושתקת, נחזיר אותה לנגן
+            if (!bgMusic.muted) bgMusic.play();
             document.querySelectorAll('.target').forEach(t => t.getAnimations().forEach(a => a.play()));
         }
     }
@@ -301,8 +296,10 @@
 
     window.onload = renderCharacterRow;
     document.getElementById('start-button').onclick = initGame;
-    document.getElementById('mute-btn').onclick = () => { bgMusic.muted = !bgMusic.muted; slashSound.muted = bgMusic.muted; document.getElementById('mute-btn').innerText = bgMusic.muted ? "🔇" : "🔊"; };
-    document.getElementById('pause-btn').onclick = togglePause;
+    document.getElementById('mute-btn').onclick = () => { 
+        bgMusic.muted = !bgMusic.muted; 
+        document.getElementById('mute-btn').innerText = bgMusic.muted ? "🔇" : "🔊"; 
+    };
     document.getElementById('early-end-btn').onclick = finishGame;
 </script>
 </body>
