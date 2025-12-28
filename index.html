@@ -34,7 +34,7 @@
         
         .side-btn { position: fixed; z-index: 3000; background: rgba(0,0,0,0.7); border: 2px solid white; color: white; cursor: pointer; font-weight: bold; }
         #mute-btn { top: 20px; right: 20px; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; }
-        #early-end-btn { top: 20px; left: 20px; border-radius: 10px; padding: 12px 20px; font-size: 15px; }
+        #early-end-btn { top: 20px; left: 20px; border-radius: 10px; padding: 12px 20px; font-size: 15px; display: none; } /* מוסתר כברירת מחדל */
         
         .target { position: absolute; width: 115px; height: 115px; border-radius: 50%; background-size: cover; border: 4px solid white; z-index: 20; }
         #round-announcer { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); font-size: 130px; color: #ff0000; z-index: 500; display: none; text-shadow: 0 0 30px black; font-weight: bold; width: 100%; pointer-events: none; }
@@ -44,6 +44,19 @@
         .delete-btn { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 13px; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; z-index: 5; font-weight: bold; }
         #upload-modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; padding: 30px; border-radius: 20px; border: 3px solid #ff0000; display: none; z-index: 5000; width: 80%; max-width: 420px; }
 
+        #share-container { 
+            margin: 20px 0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 15px;
+            z-index: 4010;
+        }
+        #share-title { font-size: 22px; color: #fff; margin: 0; }
+        .share-icons { display: flex; gap: 15px; align-items: center; }
+        .share-icon-btn { width: 45px; height: 45px; cursor: pointer; transition: transform 0.2s; border-radius: 50%; }
+        .share-icon-btn:hover { transform: scale(1.1); }
+
         @media (max-width: 768px) {
             body { background: url('bg_mobile.jpg') no-repeat center center fixed !important; background-size: cover !important; }
             #fallback-bg { display: none !important; }
@@ -51,20 +64,37 @@
             #sub-title { font-size: 20px; margin: 10px 0; }
             #character-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-height: 40vh; overflow-y: auto; justify-items: center; overflow-x: hidden; }
             #mute-btn { width: 35px; height: 35px; font-size: 16px; top: 10px; right: 10px; }
-            #early-end-btn { font-size: 9px; padding: 5px 10px; top: 10px; left: 10px; }
+            #early-end-btn { font-size: 11.25px; padding: 6.25px 12.5px; top: 10px; left: 10px; }
             .target { width: 85px; height: 85px; }
             #round-announcer { font-size: 90px; }
             #ui-layer { bottom: 115px !important; justify-content: center !important; gap: 15px !important; padding: 0 !important; }
             .stat-box { font-size: 14px !important; min-width: 100px; }
+            #end-screen-bg { background-image: url('bg_mobile.jpg') !important; }
         }
 
-        #end-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 4000; padding: 20px; }
-        #most-hit-img { width: 150px; height: 150px; border-radius: 50%; border: 6px solid #ff0000; margin: 15px 0; background-size: cover; }
+        #end-screen { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.95); display: none; flex-direction: column; 
+            justify-content: center; align-items: center; z-index: 4000; padding: 20px; box-sizing: border-box; 
+        }
+
+        #end-screen-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: url('bg.png') no-repeat center top;
+            background-size: cover;
+            opacity: 0.08; 
+            z-index: -1;
+        }
+
+        #most-hit-img { width: 120px; height: 120px; border-radius: 50%; border: 4px solid #ff0000; margin: 10px 0; background-size: cover; z-index: 4010; }
         .particle { position: absolute; width: 8px; height: 8px; background: #ff0000; pointer-events: none; z-index: 60; }
         #pause-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 5000; font-size: 40px; color: white; flex-direction: column; }
         
-        #feedback-text { font-size: 26px; margin: 15px 0; font-style: italic; text-shadow: 2px 2px #000; opacity: 0; }
+        #feedback-text { font-size: 26px; margin: 10px 0; font-style: italic; text-shadow: 2px 2px #000; opacity: 0; z-index: 4010; }
         .animate-feedback { animation: feedbackPop 0.6s ease-out forwards, feedbackPulse 2s infinite 0.6s; }
+
+        #final-total-score { font-size: 50px; color: #fff; margin: 15px 0; text-shadow: 0 0 20px #ff0000; z-index: 4010; }
+        .wide-btn { width: 90%; max-width: 500px; margin-top: 20px; z-index: 4010; }
 
         @keyframes feedbackPop {
             0% { transform: scale(0.5); opacity: 0; }
@@ -86,7 +116,7 @@
 <div id="fallback-bg"></div>
 
 <button id="mute-btn" class="side-btn" style="display:none;">🔊</button>
-<button id="early-end-btn" class="side-btn" style="display:none;">END GAME</button>
+<button id="early-end-btn" class="side-btn">END GAME</button>
 
 <div id="pause-overlay">
     PAUSED
@@ -119,18 +149,28 @@
 </div>
 
 <div id="end-screen">
-    <h1 style="font-size: 50px; color: #ff0000; margin: 0;">BX SLASHERS</h1>
+    <div id="end-screen-bg"></div>
+    
+    <h1 style="font-size: 40px; color: #ff0000; margin: 0; z-index: 4010;">BX SLASHERS</h1>
     <div id="most-hit-img"></div>
-    <p id="most-hit-text" style="font-size: 20px; color: #ddd;"></p>
+    <p id="most-hit-text" style="font-size: 18px; color: #ddd; z-index: 4010;"></p>
     <div id="self-kill-container">
-        <p id="self-kill-text" style="font-size: 22px; color: #ff0000; font-weight: bold; margin: 10px 0;"></p>
+        <p id="self-kill-text" style="font-size: 20px; color: #ff0000; font-weight: bold; margin: 10px 0; z-index: 4010;"></p>
     </div>
-    <h2 id="final-total-score" style="font-size: 32px; color: #fff;"></h2>
+    
+    <h2 id="final-total-score"></h2>
     
     <p id="feedback-text"></p>
 
-    <button onclick="location.reload()" class="main-btn" style="width: 220px;">PLAY AGAIN</button>
-    <button id="whatsapp-share" class="main-btn" style="background:#25D366; width: 220px;">SHARE 📱</button>
+    <div id="share-container">
+        <p id="share-title">Share With Your Friends</p>
+        <div class="share-icons">
+            <img src="whatsapp.png" alt="WhatsApp" class="share-icon-btn" id="whatsapp-share-btn">
+            <img src="teams.jpeg" alt="Teams" class="share-icon-btn" id="teams-share-btn">
+        </div>
+    </div>
+
+    <button onclick="location.reload()" class="main-btn wide-btn">PLAY AGAIN</button>
 </div>
 
 <script>
@@ -140,7 +180,6 @@
     
     const defaultCharacters = [{name:'ella', url:'ella.png', bonus:true, isDefault: true}, {name:'amir', url:'amir.png', bonus:false, isDefault: true}, {name:'elad', url:'elad.png', bonus:true, isDefault: true}, {name:'shay', url:'shay.png', bonus:false, isDefault: true}, {name:'achinoam', url:'achinoam.png', bonus:false, isDefault: true}, {name:'einat', url:'einat.png', bonus:false, isDefault: true}, {name:'doron', url:'doron.png', bonus:true, isDefault: true}, {name:'hadas', url:'hadas.png', bonus:false, isDefault: true}, {name:'adi', url:'adi.png', bonus:true, isDefault: true}, {name:'idan', url:'idan.png', bonus:true, isDefault: true}, {name:'shoval', url:'shoval.png', bonus:false, isDefault: true}, {name:'stas', url:'stas.png', bonus:false, isDefault: true}, {name:'vik', url:'vik.png', bonus:false, isDefault: true}, {name:'vivi', url:'vivi.png', bonus:false, isDefault: true}];
     
-    // טעינת דמויות מ-localStorage (רק אלו שאינן ברירת מחדל)
     let customCharacters = JSON.parse(localStorage.getItem('bx_custom_characters')) || [];
     let characters = [...defaultCharacters, ...customCharacters];
     
@@ -174,7 +213,7 @@
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
         document.getElementById('mute-btn').style.display = 'block';
-        document.getElementById('early-end-btn').style.display = 'block';
+        document.getElementById('early-end-btn').style.display = 'none'; // מבטיח שהכפתור מוסתר בתחילת הספירה
 
         const announcer = document.getElementById('round-announcer'); 
         announcer.style.display = 'block';
@@ -183,7 +222,13 @@
             if (isPaused) return;
             count--; 
             if (count > 0) announcer.innerText = count; 
-            else { clearInterval(countInt); announcer.style.display = 'none'; startGameLogic(); } 
+            else { 
+                clearInterval(countInt); 
+                announcer.style.display = 'none'; 
+                startGameLogic(); 
+                // הצגת כפתור END GAME רק בסיום הספירה
+                document.getElementById('early-end-btn').style.display = 'block';
+            } 
         }, 1000);
     }
 
@@ -285,7 +330,7 @@
             selfKillEl.style.display = 'none';
         }
 
-        document.getElementById('final-total-score').innerText = `Total Score: ${score}`;
+        document.getElementById('final-total-score').innerText = `You Score ${score}`;
 
         const lastScore = localStorage.getItem('bx_last_score');
         const feedbackEl = document.getElementById('feedback-text');
@@ -308,11 +353,16 @@
         
         localStorage.setItem('bx_last_score', score);
 
-        document.getElementById('whatsapp-share').onclick = () => { 
-            let shareMsg = `I scored ${score} points on BX SLASHERS! 🔪 `;
-            if (selfKills > 0) shareMsg += `I even killed myself ${selfKills} times! `;
-            shareMsg += `Beat me here: ${gameUrl}`;
+        let shareMsg = `I scored ${score} points on BX SLASHERS! 🔪 `;
+        if (selfKills > 0) shareMsg += `I even killed myself ${selfKills} times! `;
+        shareMsg += `Beat me here: ${gameUrl}`;
+
+        document.getElementById('whatsapp-share-btn').onclick = () => { 
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareMsg)}`, '_blank'); 
+        };
+
+        document.getElementById('teams-share-btn').onclick = () => { 
+            window.open(`https://teams.microsoft.com/share?text=${encodeURIComponent(shareMsg)}&href=${encodeURIComponent(gameUrl)}`, '_blank'); 
         };
     }
 
@@ -329,7 +379,6 @@
                 renderCharacterRow(); 
             };
             
-            // הוספת כפתור מחיקה רק לדמויות שאינן ברירת מחדל
             if (!char.isDefault) {
                 const del = document.createElement('button'); del.className = 'delete-btn'; del.innerText = '×';
                 del.onclick = (e) => { 
@@ -338,12 +387,8 @@
                         selectedSlasher = null;
                         document.getElementById('start-button').disabled = true;
                     }
-                    
-                    // מחיקה מהמערכים
                     customCharacters = customCharacters.filter(c => c.name !== char.name);
                     characters = [...defaultCharacters, ...customCharacters];
-                    
-                    // עדכון זיכרון
                     localStorage.setItem('bx_custom_characters', JSON.stringify(customCharacters));
                     renderCharacterRow(); 
                 };
@@ -361,10 +406,8 @@
         reader.onload = (e) => { 
             const tempName = "Guest_" + Date.now();
             const newChar = {name: tempName, url: e.target.result, bonus: false, isDefault: false};
-            
             customCharacters.push(newChar);
             characters = [...defaultCharacters, ...customCharacters];
-            
             try {
                 localStorage.setItem('bx_custom_characters', JSON.stringify(customCharacters));
             } catch (err) {
@@ -372,7 +415,6 @@
                 customCharacters.pop();
                 return;
             }
-            
             renderCharacterRow(); 
             document.getElementById('upload-modal').style.display = 'none';
             document.getElementById('new-file').value = ""; 
