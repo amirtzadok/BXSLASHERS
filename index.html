@@ -180,6 +180,8 @@
         slashSound.play().catch(e => console.log("Sound error: ", e));
     }
 
+    // הוסר המאזין ל-dblclick כדי לבטל את העצירה בלחיצה כפולה
+
     async function initGame() {
         if (!selectedSlasher) return;
         unlockAudio();
@@ -285,7 +287,7 @@
         const selfKillEl = document.getElementById('self-kill-text');
         if (selfKills > 0) { selfKillEl.innerHTML = `You also Killed Yourself ${selfKills} times`; selfKillEl.style.display = 'block'; }
         else selfKillEl.style.display = 'none';
-        document.getElementById('final-total-score').innerText = `You Score ${score}`;
+        document.getElementById('final-total-score').innerText = `You Scored ${score}`;
         const lastScore = localStorage.getItem('bx_last_score');
         const feedbackEl = document.getElementById('feedback-text');
         feedbackEl.classList.remove('animate-feedback'); 
