@@ -9,7 +9,6 @@
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Arial Black', sans-serif; color: white; text-align: center; touch-action: none; }
         
-        /* רקע המשחק הקבוע */
         #fallback-bg { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: url('bg.png') no-repeat center center; 
@@ -19,7 +18,6 @@
         #game-container { position: relative; width: 100vw; height: 100vh; z-index: 10; display: none; }
         #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; padding: 20px; box-sizing: border-box; }
         
-        /* עיצוב דסקטופ */
         #main-title { font-size: 85px; color: #ff0000; text-shadow: 5px 5px #fff; margin: 0; text-transform: uppercase; }
         #sub-title { font-size: 28px; color: #fff; margin: 15px 0 25px 0; }
         
@@ -31,21 +29,32 @@
         
         .side-btn { position: fixed; z-index: 3000; background: rgba(0,0,0,0.7); border: 2px solid white; color: white; cursor: pointer; font-weight: bold; }
         #mute-btn { top: 20px; right: 20px; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; }
+        #pause-btn { top: 20px; right: 90px; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; }
         #early-end-btn { top: 20px; left: 20px; border-radius: 10px; padding: 12px 20px; font-size: 15px; }
         
         .target { position: absolute; width: 115px; height: 115px; border-radius: 50%; background-size: cover; border: 4px solid white; z-index: 20; }
         #round-announcer { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); font-size: 130px; color: #ff0000; z-index: 500; display: none; text-shadow: 0 0 30px black; font-weight: bold; width: 100%; pointer-events: none; }
 
+        /* Mobile Adjustments */
         @media (max-width: 768px) {
             #main-title { font-size: 50px; text-shadow: 3px 3px #fff; }
             #sub-title { font-size: 20px; margin: 10px 0; }
             #character-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-height: 45vh; overflow-y: auto; justify-items: center; overflow-x: hidden; }
             .char-preview { width: 70px; height: 70px; }
             .main-btn { padding: 22px 35px; font-size: 28px; width: 85%; border-radius: 20px; }
-            #mute-btn { width: 75px; height: 75px; font-size: 35px; top: 15px; right: 15px; }
-            #early-end-btn { font-size: 18px; padding: 15px 25px; top: 15px; left: 15px; }
-            .target { width: 125px; height: 125px; }
+            
+            /* Shrink Side Buttons to 50% */
+            #mute-btn { width: 40px; height: 40px; font-size: 20px; top: 10px; right: 10px; }
+            #pause-btn { width: 40px; height: 40px; font-size: 20px; top: 10px; right: 60px; }
+            #early-end-btn { font-size: 10px; padding: 8px 12px; top: 10px; left: 10px; }
+            
+            /* Shrink Target Circles to ~75% */
+            .target { width: 85px; height: 85px; }
             #round-announcer { font-size: 85px; }
+
+            /* Position UI boxes in bottom corners and shrink by 50% */
+            #ui-layer { bottom: 15px !important; justify-content: space-between !important; padding: 0 15px; box-sizing: border-box; }
+            .stat-box { font-size: 12px !important; padding: 5px 10px !important; border: 1px solid #ff0000 !important; }
         }
 
         .delete-btn { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 13px; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; }
@@ -53,6 +62,8 @@
         #end-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 4000; }
         #most-hit-img { width: 150px; height: 150px; border-radius: 50%; border: 6px solid #ff0000; margin: 15px 0; background-size: cover; }
         .particle { position: absolute; width: 8px; height: 8px; background: #ff0000; pointer-events: none; z-index: 60; }
+        
+        #pause-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 5000; font-size: 50px; color: white; flex-direction: column; }
     </style>
 </head>
 <body>
@@ -60,8 +71,14 @@
 <audio id="bg-music" src="Final Girl Glitch.mp3" preload="auto"></audio>
 <div id="fallback-bg"></div>
 
-<button id="mute-btn" class="side-btn" style="display:none;">🔊</button>
+<button id="mute-btn" class="side-btn" style="display:none;">🔇</button>
+<button id="pause-btn" class="side-btn" style="display:none;">⏸</button>
 <button id="early-end-btn" class="side-btn" style="display:none;">END GAME</button>
+
+<div id="pause-overlay">
+    PAUSED
+    <button class="main-btn" onclick="togglePause()">RESUME</button>
+</div>
 
 <div id="round-announcer">3</div>
 
@@ -102,7 +119,7 @@
     const gameUrl = window.location.href;
     let characters = [{name:'ella', url:'ella.png', bonus:true}, {name:'amir', url:'amir.png', bonus:false}, {name:'elad', url:'elad.png', bonus:true}, {name:'shay', url:'shay.png', bonus:false}, {name:'achinoam', url:'achinoam.png', bonus:false}, {name:'einat', url:'einat.png', bonus:false}, {name:'doron', url:'doron.png', bonus:true}, {name:'hadas', url:'hadas.png', bonus:false}, {name:'adi', url:'adi.png', bonus:true}, {name:'idan', url:'idan.png', bonus:true}, {name:'shoval', url:'shoval.png', bonus:false}, {name:'stas', url:'stas.png', bonus:false}, {name:'vik', url:'vik.png', bonus:false}, {name:'vivi', url:'vivi.png', bonus:false}];
     
-    let hitCount = {}; let score = 0, songElapsed = 0, gameActive = false, selectedSlasher = 'amir', selfKills = 0;
+    let hitCount = {}; let score = 0, songElapsed = 0, gameActive = false, isPaused = false, selectedSlasher = 'amir', selfKills = 0;
     let spawnRate = 1200, moveDuration = 4000, mainInterval;
     const bgMusic = document.getElementById('bg-music');
 
@@ -113,16 +130,33 @@
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
         document.getElementById('mute-btn').style.display = 'block';
+        document.getElementById('pause-btn').style.display = 'block';
         document.getElementById('early-end-btn').style.display = 'block';
 
         const announcer = document.getElementById('round-announcer'); 
         announcer.style.display = 'block';
         let count = 3; announcer.innerText = count;
         const countInt = setInterval(() => { 
+            if (isPaused) return;
             count--; 
             if (count > 0) announcer.innerText = count; 
             else { clearInterval(countInt); announcer.style.display = 'none'; startGameLogic(); } 
         }, 1000);
+    }
+
+    function togglePause() {
+        if (!gameActive && songElapsed === 0) return; // Prevent pause during initial 3s countdown if desired
+        isPaused = !isPaused;
+        const overlay = document.getElementById('pause-overlay');
+        if (isPaused) {
+            overlay.style.display = 'flex';
+            bgMusic.pause();
+            document.querySelectorAll('.target').forEach(t => t.getAnimations().forEach(a => a.pause()));
+        } else {
+            overlay.style.display = 'none';
+            bgMusic.play();
+            document.querySelectorAll('.target').forEach(t => t.getAnimations().forEach(a => a.play()));
+        }
     }
 
     function startGameLogic() { 
@@ -132,7 +166,7 @@
     }
 
     function slash(el) {
-        if (el.dataset.hit === "true") return; el.dataset.hit = "true";
+        if (isPaused || el.dataset.hit === "true") return; el.dataset.hit = "true";
         const rect = el.getBoundingClientRect(); createExplosion(rect.left + rect.width/2, rect.top + rect.height/2);
         playSlashSound();
         const charName = el.dataset.name; hitCount[charName] = (hitCount[charName] || 0) + 1;
@@ -152,9 +186,33 @@
         osc.start(); osc.stop(audioCtx.currentTime + 0.1);
     }
 
-    function mainTimer() { mainInterval = setInterval(() => { if (!gameActive) return; songElapsed++; document.getElementById('timer').innerText = 60 - songElapsed; if (songElapsed === 14) startRound(2); if (songElapsed === 35) startRound(3); if (songElapsed >= 60) finishGame(); }, 1000); }
-    function startRound(num) { spawnRate = 1250 - (num * 300); moveDuration = 4500 - (num * 1000); const ann = document.getElementById('round-announcer'); ann.innerText = `ROUND ${num}`; ann.style.display = 'block'; setTimeout(() => ann.style.display = 'none', 1500); spawnLoop(); }
-    function spawnLoop() { if (!gameActive) return; createTarget(); setTimeout(spawnLoop, spawnRate); }
+    function mainTimer() { 
+        mainInterval = setInterval(() => { 
+            if (!gameActive || isPaused) return; 
+            songElapsed++; 
+            document.getElementById('timer').innerText = 60 - songElapsed; 
+            if (songElapsed === 14) startRound(2); 
+            if (songElapsed === 35) startRound(3); 
+            if (songElapsed >= 60) finishGame(); 
+        }, 1000); 
+    }
+
+    function startRound(num) { 
+        spawnRate = 1250 - (num * 300); 
+        moveDuration = 4500 - (num * 1000); 
+        const ann = document.getElementById('round-announcer'); 
+        ann.innerText = `ROUND ${num}`; 
+        ann.style.display = 'block'; 
+        setTimeout(() => ann.style.display = 'none', 1500); 
+        spawnLoop(); 
+    }
+
+    function spawnLoop() { 
+        if (!gameActive) return; 
+        if (!isPaused) createTarget(); 
+        setTimeout(spawnLoop, spawnRate); 
+    }
+
     function finishGame() { gameActive = false; clearInterval(mainInterval); bgMusic.pause(); showEndScreen(); }
 
     function createTarget() {
@@ -210,7 +268,8 @@
 
     window.onload = renderCharacterRow;
     document.getElementById('start-button').onclick = initGame;
-    document.getElementById('mute-btn').onclick = () => { bgMusic.muted = !bgMusic.muted; document.getElementById('mute-btn').innerText = bgMusic.muted ? "🔊" : "🔇"; };
+    document.getElementById('mute-btn').onclick = () => { bgMusic.muted = !bgMusic.muted; document.getElementById('mute-btn').innerText = bgMusic.muted ? "🔇" : "🔊"; };
+    document.getElementById('pause-btn').onclick = togglePause;
     document.getElementById('early-end-btn').onclick = finishGame;
 </script>
 </body>
