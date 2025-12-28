@@ -15,208 +15,139 @@
             text-align: center; touch-action: none; 
         }
         
-        #fallback-bg { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: url('bg.png') no-repeat center top; 
-            background-size: cover; z-index: 1; display: block; 
-        }
-
-        /* וידאו המצלמה - מוצג בשקיפות נמוכה כרקע */
-        #webcam {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            object-fit: cover; transform: scaleX(-1); opacity: 0.4; display: none; z-index: 2;
-        }
-        
+        #fallback-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111; z-index: 1; display: block; }
+        #webcam { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); opacity: 0.4; z-index: 2; display: none; }
         #game-container { position: relative; width: 100vw; height: 100vh; z-index: 10; display: none; }
-        #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; padding: 20px; box-sizing: border-box; }
         
-        #main-title { font-size: 85px; color: #ff0000; text-shadow: 5px 5px #fff; margin: 0; text-transform: uppercase; }
-        #sub-title { font-size: 28px; color: #fff; margin: 15px 0 10px 0; }
+        #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; padding: 20px; box-sizing: border-box; }
+        #main-title { font-size: 80px; color: #ff0000; text-shadow: 4px 4px #fff; margin: 0; text-transform: uppercase; }
         
         #character-row { display: flex; justify-content: center; gap: 12px; width: 95%; overflow-x: auto; padding: 20px; margin-bottom: 20px; }
         .char-preview { width: 65px; height: 65px; border-radius: 50%; background-size: cover; border: 3px solid #fff; flex-shrink: 0; position: relative; cursor: pointer; transition: transform 0.2s; }
         .char-preview.selected { border: 5px solid #00ff00 !important; transform: scale(1.2); box-shadow: 0 0 20px #00ff00; }
-        
-        .main-btn { padding: 18px 45px; font-size: 26px; cursor: pointer; color: white; border: none; border-radius: 15px; font-weight: bold; transition: 0.3s; margin: 10px; background: #ff0000; box-shadow: 0 0 25px #ff0000; text-transform: uppercase; }
-        .main-btn:disabled { background: #555; box-shadow: none; cursor: not-allowed; opacity: 0.6; }
-        
-        /* בחירת מצב שליטה */
-        #control-selector { margin-bottom: 20px; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; border: 1px solid #ff0000; }
-        #control-selector label { font-size: 18px; margin-right: 10px; }
-        #control-mode { padding: 10px; background: #000; color: #fff; border: 1px solid #ff0000; border-radius: 5px; cursor: pointer; }
+        .delete-btn { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; border: none; cursor: pointer; }
 
-        .target { position: absolute; width: 115px; height: 115px; border-radius: 50%; background-size: cover; border: 4px solid white; z-index: 20; }
-        #hand-dot { position: fixed; width: 30px; height: 30px; background: rgba(255, 0, 0, 0.7); border: 3px solid white; border-radius: 50%; pointer-events: none; z-index: 9999; display: none; box-shadow: 0 0 15px #ff0000; }
+        .main-btn { padding: 18px 45px; font-size: 24px; cursor: pointer; color: white; border: none; border-radius: 15px; font-weight: bold; background: #ff0000; box-shadow: 0 0 20px #ff0000; text-transform: uppercase; }
+        .main-btn:disabled { background: #555; box-shadow: none; opacity: 0.6; }
+        
+        .side-btn { position: fixed; z-index: 3000; background: rgba(0,0,0,0.7); border: 2px solid white; color: white; cursor: pointer; border-radius: 50%; width: 55px; height: 55px; font-size: 22px; display: flex; align-items: center; justify-content: center; }
+        #mute-btn { top: 20px; right: 20px; }
+        #cam-btn { top: 20px; right: 85px; }
 
-        @media (max-width: 768px) {
-            #main-title { font-size: 50px; }
-            #character-row { display: grid; grid-template-columns: repeat(4, 1fr); }
-        }
+        .target { position: absolute; width: 110px; height: 110px; border-radius: 50%; background-size: cover; border: 4px solid white; z-index: 20; }
+        #hand-dot { position: fixed; width: 25px; height: 25px; background: #00ff00; border: 2px solid white; border-radius: 50%; pointer-events: none; z-index: 9999; display: none; }
+
+        #upload-modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; padding: 25px; border-radius: 20px; border: 3px solid #ff0000; display: none; z-index: 5000; width: 80%; max-width: 350px; }
+        input { width: 100%; margin-bottom: 15px; padding: 10px; box-sizing: border-box; }
+
+        @media (max-width: 768px) { #main-title { font-size: 45px; } #character-row { display: grid; grid-template-columns: repeat(4, 1fr); } }
     </style>
 </head>
-<body id="body-el">
+<body>
 
 <video id="webcam" autoplay playsinline></video>
 <div id="hand-dot"></div>
 <div id="fallback-bg"></div>
 
+<button id="mute-btn" class="side-btn">🔊</button>
+<button id="cam-btn" class="side-btn">📷</button>
+
 <div id="start-screen">
     <h1 id="main-title">BX SLASHERS</h1>
-    <h2 id="sub-title">CHOOSE YOUR SLASHER</h2>
-    
+    <h2 style="font-size: 20px; margin: 10px 0;">SELECT SLASHER</h2>
     <div id="character-row"></div>
-
-    <div id="control-selector">
-        <label>PLAY WITH:</label>
-        <select id="control-mode">
-            <option value="mouse">Mouse / Touch</option>
-            <option value="hands">Hands (Camera)</option>
-        </select>
-    </div>
-
     <button id="start-button" class="main-btn" disabled>START GAME</button>
+    <button onclick="document.getElementById('upload-modal').style.display='block'" style="background:none; border:none; color:#aaa; text-decoration:underline; cursor:pointer; margin-top:15px;">+ Add Custom Slasher</button>
+</div>
+
+<div id="upload-modal">
+    <h3>ADD NEW FACE</h3>
+    <input type="text" id="new-name" placeholder="Name...">
+    <input type="file" id="new-file" accept="image/*">
+    <button onclick="saveNewCharacter()" style="background:red; color:white; padding:12px; width:100%; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">SAVE</button>
+    <button onclick="document.getElementById('upload-modal').style.display='none'" style="background:none; color:white; margin-top:10px; cursor:pointer; border:none;">Cancel</button>
 </div>
 
 <div id="game-container">
-    <div style="position: absolute; top: 20px; left: 20px; z-index: 100; font-size: 24px;">
-        Score: <span id="score-board">0</span> | Time: <span id="timer">60</span>
+    <div style="position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: space-around; font-size: 22px; z-index: 100;">
+        <div style="background:rgba(0,0,0,0.7); padding:10px; border-radius:10px; border:1px solid red;">Score: <span id="score-board">0</span></div>
+        <div style="background:rgba(0,0,0,0.7); padding:10px; border-radius:10px; border:1px solid red;">Time: <span id="timer">60</span></div>
     </div>
 </div>
 
 <script>
-    let characters = [{name:'ella', url:'ella.png', bonus:true}, {name:'amir', url:'amir.png', bonus:false}, {name:'elad', url:'elad.png', bonus:true}, {name:'shay', url:'shay.png', bonus:false}];
-    let selectedSlasher = null;
-    let score = 0;
-    let gameActive = false;
-    let controlMode = 'mouse';
-    let timeLeft = 60;
+    let characters = [{name:'ella', url:'ella.png'}, {name:'amir', url:'amir.png'}, {name:'elad', url:'elad.png'}, {name:'shay', url:'shay.png'}, {name:'achinoam', url:'achinoam.png'}, {name:'einat', url:'einat.png'}, {name:'doron', url:'doron.png'}, {name:'hadas', url:'hadas.png'}, {name:'adi', url:'adi.png'}, {name:'idan', url:'idan.png'}, {name:'shoval', url:'shoval.png'}, {name:'stas', url:'stas.png'}, {name:'vik', url:'vik.png'}, {name:'vivi', url:'vivi.png'}];
+    let score = 0, gameActive = false, camEnabled = true, timeLeft = 60, selectedSlasher = null;
+    const videoElement = document.getElementById('webcam'), handDot = document.getElementById('hand-dot'), camBtn = document.getElementById('cam-btn');
 
-    const videoElement = document.getElementById('webcam');
-    const handDot = document.getElementById('hand-dot');
-
-    // --- MediaPipe Hand Tracking Setup ---
-    const hands = new Hands({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-    });
-
-    hands.setOptions({
-        maxNumHands: 1,
-        modelComplexity: 1,
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5
-    });
-
-    hands.onResults(onResults);
-
-    function onResults(results) {
-        if (!gameActive || controlMode !== 'hands') return;
-
+    // --- MediaPipe Setup ---
+    const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
+    hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+    hands.onResults((results) => {
+        if (!gameActive || !camEnabled) return;
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-            const landmarks = results.multiHandLandmarks[0];
-            const indexFinger = landmarks[8]; // קצה האצבע המורה
-            
-            const x = (1 - indexFinger.x) * window.innerWidth;
-            const y = indexFinger.y * window.innerHeight;
+            const indexFinger = results.multiHandLandmarks[0][8];
+            const x = (1 - indexFinger.x) * window.innerWidth, y = indexFinger.y * window.innerHeight;
+            handDot.style.display = 'block'; handDot.style.left = x + 'px'; handDot.style.top = y + 'px';
+            document.elementsFromPoint(x, y).forEach(el => { if (el.classList.contains('target')) slash(el); });
+        } else { handDot.style.display = 'none'; }
+    });
 
-            handDot.style.display = 'block';
-            handDot.style.left = x - 15 + 'px';
-            handDot.style.top = y - 15 + 'px';
-
-            // בדיקת פגיעה בתוך ה-DOM
-            const elements = document.elementsFromPoint(x, y);
-            elements.forEach(el => {
-                if (el.classList.contains('target')) {
-                    slash(el);
-                }
-            });
-        } else {
-            handDot.style.display = 'none';
-        }
+    async function startCamera() {
+        try {
+            const camera = new Camera(videoElement, { onFrame: async () => { if(camEnabled) await hands.send({image: videoElement}); }, width: 1280, height: 720 });
+            camera.start(); videoElement.style.display = 'block';
+        } catch (e) { console.log("Cam Error", e); }
     }
 
-    async function initGame() {
-        controlMode = document.getElementById('control-mode').value;
-        
-        if (controlMode === 'hands') {
-            videoElement.style.display = 'block';
-            const camera = new Camera(videoElement, {
-                onFrame: async () => {
-                    await hands.send({image: videoElement});
-                },
-                width: 1280,
-                height: 720
-            });
-            camera.start();
-        }
-
-        document.getElementById('start-screen').style.display = 'none';
-        document.getElementById('game-container').style.display = 'block';
-        gameActive = true;
-        spawnLoop();
-        startTimer();
-    }
-
-    function spawnLoop() {
-        if (!gameActive) return;
-        createTarget();
-        setTimeout(spawnLoop, 1000);
-    }
-
-    function createTarget() {
-        const char = characters[Math.floor(Math.random() * characters.length)];
-        const t = document.createElement('div');
-        t.className = 'target';
-        t.style.backgroundImage = `url('${char.url}')`;
-        t.style.left = Math.random() * 80 + '%';
-        t.style.top = Math.random() * 80 + '%';
-        
-        if (controlMode === 'mouse') {
-            t.onmousedown = () => slash(t);
-        }
-        
-        document.getElementById('game-container').appendChild(t);
-        setTimeout(() => { if(t.parentNode) t.remove(); }, 2000);
-    }
-
-    function slash(el) {
-        if (el.dataset.hit) return;
-        el.dataset.hit = "true";
-        score += 10;
-        document.getElementById('score-board').innerText = score;
-        el.style.transform = "scale(0)";
-        setTimeout(() => el.remove(), 200);
-    }
-
-    function startTimer() {
-        const int = setInterval(() => {
-            timeLeft--;
-            document.getElementById('timer').innerText = timeLeft;
-            if (timeLeft <= 0) {
-                clearInterval(int);
-                alert("GAME OVER! Score: " + score);
-                location.reload();
-            }
-        }, 1000);
-    }
+    camBtn.onclick = () => { camEnabled = !camEnabled; videoElement.style.opacity = camEnabled ? "0.4" : "0"; camBtn.innerText = camEnabled ? "📷" : "🚫"; if(!camEnabled) handDot.style.display='none'; };
 
     function renderCharacterRow() {
-        const row = document.getElementById('character-row');
-        characters.forEach((char) => {
-            const div = document.createElement('div');
-            div.className = 'char-preview';
+        const row = document.getElementById('character-row'); row.innerHTML = '';
+        characters.forEach((char, idx) => {
+            const div = document.createElement('div'); div.className = 'char-preview' + (char.name === selectedSlasher ? ' selected' : '');
             div.style.backgroundImage = `url('${char.url}')`;
-            div.onclick = () => {
-                selectedSlasher = char.name;
-                document.querySelectorAll('.char-preview').forEach(p => p.classList.remove('selected'));
-                div.classList.add('selected');
-                document.getElementById('start-button').disabled = false;
-            };
-            row.appendChild(div);
+            div.onclick = () => { selectedSlasher = char.name; document.getElementById('start-button').disabled = false; renderCharacterRow(); startCamera(); };
+            const del = document.createElement('button'); del.className = 'delete-btn'; del.innerText = '×';
+            del.onclick = (e) => { e.stopPropagation(); characters.splice(idx,1); if(selectedSlasher === char.name) { selectedSlasher = null; document.getElementById('start-button').disabled = true; } renderCharacterRow(); };
+            div.appendChild(del); row.appendChild(div);
         });
     }
 
+    function saveNewCharacter() {
+        const name = document.getElementById('new-name').value, file = document.getElementById('new-file').files[0];
+        if(!name || !file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => { characters.push({name: name, url: e.target.result}); renderCharacterRow(); document.getElementById('upload-modal').style.display = 'none'; };
+        reader.readAsDataURL(file);
+    }
+
+    function slash(el) {
+        if (el.dataset.hit) return; el.dataset.hit = "true";
+        score += 10; document.getElementById('score-board').innerText = score;
+        el.style.transform = "scale(0)"; setTimeout(() => el.remove(), 200);
+    }
+
+    function createTarget() {
+        if (!gameActive) return;
+        const char = characters[Math.floor(Math.random() * characters.length)];
+        const t = document.createElement('div'); t.className = 'target';
+        t.style.backgroundImage = `url('${char.url}')`;
+        t.style.left = Math.random() * 80 + '%'; t.style.top = Math.random() * 80 + '%';
+        t.onmousedown = () => slash(t);
+        document.getElementById('game-container').appendChild(t);
+        setTimeout(() => { if(t.parentNode) t.remove(); }, 2000);
+        setTimeout(createTarget, 1000);
+    }
+
+    document.getElementById('start-button').onclick = () => {
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        gameActive = true; createTarget();
+        const int = setInterval(() => { timeLeft--; document.getElementById('timer').innerText = timeLeft; if(timeLeft <= 0){ clearInterval(int); alert("Score: " + score); location.reload(); } }, 1000);
+    };
+
     window.onload = renderCharacterRow;
-    document.getElementById('start-button').onclick = initGame;
 </script>
 </body>
 </html>
