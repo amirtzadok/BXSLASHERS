@@ -2,275 +2,186 @@
 <html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BX SLASHERS - HAND TRACKING</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BX SLASHERS</title>
+    <link rel="icon" type="image/png" href="icon.png">
 
     <style>
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; 
-            background-color: #000; font-family: 'Arial Black', sans-serif; color: white; 
-            text-align: center; touch-action: none; 
-        }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Arial Black', sans-serif; color: white; text-align: center; touch-action: none; }
         
-        /* רקע דסקטופ */
         #fallback-bg { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: url('bg.png') no-repeat center top; 
-            background-size: cover; z-index: 1; display: block; 
+            background: url('bg.png') no-repeat center center; 
+            background-size: cover; z-index: 0; display: block; 
         }
-
-        /* אלמנט הוידאו הנסתר של המצלמה */
-        #input-video { display: none; }
         
-        /* סמן היד הווירטואלי */
-        #hand-cursor {
-            position: fixed; width: 40px; height: 40px; background: rgba(255, 0, 0, 0.6);
-            border: 3px solid white; border-radius: 50%; pointer-events: none;
-            z-index: 9999; display: none; box-shadow: 0 0 15px #ff0000;
-        }
-
         #game-container { position: relative; width: 100vw; height: 100vh; z-index: 10; display: none; }
-        
-        /* מסך פתיחה */
-        #start-screen { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(17, 17, 17, 0.9); display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; z-index: 2000; padding: 20px; box-sizing: border-box; 
-        }
+        #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; padding: 20px; box-sizing: border-box; }
         
         #main-title { font-size: 85px; color: #ff0000; text-shadow: 5px 5px #fff; margin: 0; text-transform: uppercase; }
-        #sub-title { font-size: 28px; color: #fff; margin: 15px 0 10px 0; }
+        #sub-title { font-size: 28px; color: #fff; margin: 15px 0 25px 0; }
         
-        /* בורר מצב מצלמה */
-        .camera-selector {
-            margin: 20px 0;
-            background: rgba(255, 0, 0, 0.2);
-            padding: 15px 30px;
-            border-radius: 50px;
-            border: 2px solid #ff0000;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .camera-selector:hover { background: rgba(255, 0, 0, 0.4); }
-        .camera-selector input { cursor: pointer; transform: scale(1.5); margin-right: 15px; }
-        .camera-selector label { font-size: 20px; cursor: pointer; color: white; font-weight: bold; }
-
-        #character-row { display: flex; justify-content: center; gap: 12px; width: 95%; overflow-x: auto; padding: 15px; margin-bottom: 20px; }
-        .char-preview { width: 65px; height: 65px; border-radius: 50%; background-size: cover; border: 3px solid #fff; flex-shrink: 0; cursor: pointer; transition: 0.2s; }
+        #character-row { display: flex; justify-content: center; gap: 12px; width: 95%; overflow-x: auto; padding: 20px; margin-bottom: 30px; }
+        .char-preview { width: 65px; height: 65px; border-radius: 50%; background-size: cover; border: 3px solid #fff; flex-shrink: 0; position: relative; cursor: pointer; transition: transform 0.2s; }
         .char-preview.selected { border: 5px solid #00ff00 !important; transform: scale(1.2); box-shadow: 0 0 20px #00ff00; }
         
-        .main-btn { padding: 18px 45px; font-size: 26px; cursor: pointer; color: white; border: none; border-radius: 15px; font-weight: bold; background: #ff0000; box-shadow: 0 0 25px #ff0000; text-transform: uppercase; }
+        .main-btn { padding: 18px 45px; font-size: 26px; cursor: pointer; color: white; border: none; border-radius: 15px; font-weight: bold; transition: 0.3s; margin: 10px; background: #ff0000; box-shadow: 0 0 25px #ff0000; text-transform: uppercase; }
         
-        .side-btn { position: fixed; z-index: 3000; background: rgba(0,0,0,0.7); border: 2px solid white; color: white; cursor: pointer; font-weight: bold; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; }
-        #mute-btn { top: 20px; right: 20px; }
-        #pause-btn { top: 20px; right: 80px; }
-        #early-end-btn { top: 20px; left: 20px; border-radius: 10px; padding: 10px 15px; width: auto; font-size: 14px; }
+        .side-btn { position: fixed; z-index: 3000; background: rgba(0,0,0,0.7); border: 2px solid white; color: white; cursor: pointer; font-weight: bold; }
+        #mute-btn { top: 20px; right: 20px; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; }
+        #pause-btn { top: 20px; right: 90px; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; }
+        #early-end-btn { top: 20px; left: 20px; border-radius: 10px; padding: 12px 20px; font-size: 15px; }
         
         .target { position: absolute; width: 115px; height: 115px; border-radius: 50%; background-size: cover; border: 4px solid white; z-index: 20; }
-        #round-announcer { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); font-size: 130px; color: #ff0000; z-index: 500; display: none; text-shadow: 0 0 30px black; font-weight: bold; width: 100%; }
+        #round-announcer { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); font-size: 130px; color: #ff0000; z-index: 500; display: none; text-shadow: 0 0 30px black; font-weight: bold; width: 100%; pointer-events: none; }
 
-        .stat-box { font-size: 20px; background: rgba(0,0,0,0.85); padding: 10px 20px; border-radius: 15px; border: 2px solid #ff0000; min-width: 120px; }
-
+        /* Mobile Adjustments */
         @media (max-width: 768px) {
-            body { background: url('bg_mobile.jpg') no-repeat center center fixed !important; background-size: cover !important; }
-            #fallback-bg { display: none !important; }
-            #main-title { font-size: 50px; }
-            #sub-title { font-size: 18px; }
-            #round-announcer { font-size: 90px; }
+            #main-title { font-size: 50px; text-shadow: 3px 3px #fff; }
+            #sub-title { font-size: 20px; margin: 10px 0; }
+            #character-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-height: 45vh; overflow-y: auto; justify-items: center; overflow-x: hidden; }
+            .char-preview { width: 70px; height: 70px; }
+            .main-btn { padding: 22px 35px; font-size: 28px; width: 85%; border-radius: 20px; }
+            
+            /* Shrink Side Buttons to 50% */
+            #mute-btn { width: 40px; height: 40px; font-size: 20px; top: 10px; right: 10px; }
+            #pause-btn { width: 40px; height: 40px; font-size: 20px; top: 10px; right: 60px; }
+            #early-end-btn { font-size: 10px; padding: 8px 12px; top: 10px; left: 10px; }
+            
+            /* Shrink Target Circles to ~75% */
             .target { width: 85px; height: 85px; }
-            #ui-layer { bottom: 120px !important; }
-            .stat-box { font-size: 14px !important; min-width: 90px; }
+            #round-announcer { font-size: 85px; }
+
+            /* Position UI boxes in bottom corners and shrink by 50% */
+            #ui-layer { bottom: 15px !important; justify-content: space-between !important; padding: 0 15px; box-sizing: border-box; }
+            .stat-box { font-size: 12px !important; padding: 5px 10px !important; border: 1px solid #ff0000 !important; }
         }
 
-        .laugh-row { display: block; margin-top: 10px; font-size: 26px; color: #ff0000; text-shadow: 2px 2px #000; }
+        .delete-btn { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 13px; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; }
+        .stat-box { font-size: 20px; background: rgba(0,0,0,0.8); padding: 10px 15px; border-radius: 15px; border: 2px solid #ff0000; }
+        #end-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 4000; }
+        #most-hit-img { width: 150px; height: 150px; border-radius: 50%; border: 6px solid #ff0000; margin: 15px 0; background-size: cover; }
+        .particle { position: absolute; width: 8px; height: 8px; background: #ff0000; pointer-events: none; z-index: 60; }
+        
+        #pause-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 5000; font-size: 50px; color: white; flex-direction: column; }
     </style>
 </head>
-<body id="body-el">
+<body>
 
-<video id="input-video"></video>
-<div id="hand-cursor"></div>
-<audio id="bg-music" src="Final Girl Glitch.mp3" preload="auto" loop></audio>
+<audio id="bg-music" src="Final Girl Glitch.mp3" preload="auto"></audio>
+<audio id="slash-sound" src="sword.mp3" preload="auto"></audio>
 <div id="fallback-bg"></div>
 
 <button id="mute-btn" class="side-btn" style="display:none;">🔊</button>
 <button id="pause-btn" class="side-btn" style="display:none;">⏸</button>
 <button id="early-end-btn" class="side-btn" style="display:none;">END GAME</button>
 
+<div id="pause-overlay">
+    PAUSED
+    <button class="main-btn" onclick="togglePause()">RESUME</button>
+</div>
+
+<div id="round-announcer">3</div>
+
 <div id="start-screen">
     <h1 id="main-title">BX SLASHERS</h1>
     <h2 id="sub-title">CHOOSE YOUR SLASHER</h2>
-    
-    <div class="camera-selector" onclick="document.getElementById('camera-toggle').click()">
-        <label>
-            <input type="checkbox" id="camera-toggle" onclick="event.stopPropagation()"> 📷 הפעל מצלמה (משחק עם הידיים)
-        </label>
-    </div>
-
     <div id="character-row"></div>
     <button id="start-button" class="main-btn">START GAME</button>
+    <button onclick="document.getElementById('upload-modal').style.display='block'" style="background:none; border:none; color:#aaa; text-decoration:underline; cursor:pointer; font-size: 17px; margin-top: 10px;">+ Add Slasher</button>
+</div>
+
+<div id="upload-modal" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; padding: 30px; border-radius: 20px; border: 3px solid #ff0000; display: none; z-index: 5000; width: 80%; max-width: 420px;">
+    <h3>ADD SLASHER</h3>
+    <input type="text" id="new-name" placeholder="Name..." style="display:block; width:100%; margin-bottom:15px; padding:12px; font-size:16px;">
+    <input type="file" id="new-file" accept="image/*" style="display:block; margin-bottom:20px;">
+    <button onclick="saveNewCharacter()" style="background:red; color:white; padding:15px; border:none; cursor:pointer; font-weight:bold; width:100%; border-radius: 10px;">SAVE</button>
+    <button onclick="document.getElementById('upload-modal').style.display='none'" style="background:#555; color:white; padding:12px; border:none; cursor:pointer; margin-top:10px; width:100%; border-radius: 10px;">CANCEL</button>
 </div>
 
 <div id="game-container">
-    <div id="ui-layer" style="position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: center; gap: 30px; z-index: 100; pointer-events: none;">
+    <div id="ui-layer" style="position: absolute; bottom: 35px; width: 100%; display: flex; justify-content: space-around; pointer-events: none;">
         <div class="stat-box">Score: <span id="score-board">0</span></div>
         <div class="stat-box">Time: <span id="timer">60</span></div>
     </div>
 </div>
 
-<div id="end-screen" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 4000;">
-    <h1 style="font-size: 50px; color: #ff0000;">BX SLASHERS</h1>
-    <div id="most-hit-img" style="width: 150px; height: 150px; border-radius: 50%; border: 6px solid #ff0000; background-size: cover;"></div>
+<div id="end-screen">
+    <h1 style="font-size: 50px; color: #ff0000; margin: 0;">BX SLASHERS</h1>
+    <div id="most-hit-img"></div>
     <p id="most-hit-text" style="font-size: 20px; color: #ddd;"></p>
-    <div id="self-kill-container">
-        <p id="self-kill-text" style="font-size: 22px; color: #ff0000; font-weight: bold; margin: 10px 0;"></p>
-    </div>
+    <p id="self-kill-text" style="font-size: 22px; color: #ff0000; font-weight: bold; margin: 10px 0;"></p>
     <h2 id="final-total-score" style="font-size: 32px; color: #fff;"></h2>
-    <button onclick="location.reload()" class="main-btn">PLAY AGAIN</button>
+    <button onclick="location.reload()" class="main-btn" style="width: 220px;">PLAY AGAIN</button>
+    <button id="whatsapp-share" class="main-btn" style="background:#25D366; width: 220px;">SHARE 📱</button>
 </div>
 
 <script>
-    const videoElement = document.getElementById('input-video');
-    const handCursor = document.getElementById('hand-cursor');
-    const cameraToggle = document.getElementById('camera-toggle');
-    const bgMusic = document.getElementById('bg-music');
-    let useCamera = false;
-
+    const gameUrl = window.location.href;
     let characters = [{name:'ella', url:'ella.png', bonus:true}, {name:'amir', url:'amir.png', bonus:false}, {name:'elad', url:'elad.png', bonus:true}, {name:'shay', url:'shay.png', bonus:false}, {name:'achinoam', url:'achinoam.png', bonus:false}, {name:'einat', url:'einat.png', bonus:false}, {name:'doron', url:'doron.png', bonus:true}, {name:'hadas', url:'hadas.png', bonus:false}, {name:'adi', url:'adi.png', bonus:true}, {name:'idan', url:'idan.png', bonus:true}, {name:'shoval', url:'shoval.png', bonus:false}, {name:'stas', url:'stas.png', bonus:false}, {name:'vik', url:'vik.png', bonus:false}, {name:'vivi', url:'vivi.png', bonus:false}];
     
     let hitCount = {}; let score = 0, songElapsed = 0, gameActive = false, isPaused = false, selectedSlasher = 'amir', selfKills = 0;
-    let mainInterval, spawnLoopTimeout;
-
-    // הגדרות MediaPipe Hands
-    const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-    hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
-
-    hands.onResults((results) => {
-        if (!gameActive || isPaused || !results.multiHandLandmarks.length) {
-            handCursor.style.display = 'none';
-            return;
-        }
-        
-        handCursor.style.display = 'block';
-        const hand = results.multiHandLandmarks[0];
-        const indexFinger = hand[8]; // קצה האצבע המורה
-        
-        const x = (1 - indexFinger.x) * window.innerWidth; // מראה
-        const y = indexFinger.y * window.innerHeight;
-
-        handCursor.style.left = x + 'px';
-        handCursor.style.top = y + 'px';
-
-        checkHandCollision(x, y);
-    });
-
-    function checkHandCollision(x, y) {
-        const targets = document.querySelectorAll('.target');
-        targets.forEach(t => {
-            const rect = t.getBoundingClientRect();
-            if (x > rect.left && x < rect.right && y > rect.top && y < rect.bottom) {
-                slash(t);
-            }
-        });
-    }
-
-    const cameraInstance = new Camera(videoElement, {
-        onFrame: async () => { if(useCamera) await hands.send({image: videoElement}); },
-        width: 1280, height: 720
-    });
+    let spawnRate = 1200, moveDuration = 4000, mainInterval;
+    const bgMusic = document.getElementById('bg-music');
+    const slashSound = document.getElementById('slash-sound');
 
     async function initGame() {
-        useCamera = cameraToggle.checked;
-        
-        if (useCamera) {
-            try {
-                await cameraInstance.start();
-            } catch (err) {
-                console.error("Camera error:", err);
-                alert("לא ניתן היה להפעיל את המצלמה. המשחק יתחיל במצב עכבר.");
-                useCamera = false;
-            }
-        }
-
+        bgMusic.currentTime = 0; 
         bgMusic.play().catch(e => console.log("Audio blocked"));
+        
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
-        document.querySelectorAll('.side-btn').forEach(b => b.style.display = 'block');
+        document.getElementById('mute-btn').style.display = 'block';
+        document.getElementById('pause-btn').style.display = 'block';
+        document.getElementById('early-end-btn').style.display = 'block';
 
         const announcer = document.getElementById('round-announcer'); 
         announcer.style.display = 'block';
-        let count = 3; 
-        announcer.innerText = count;
-        
+        let count = 3; announcer.innerText = count;
         const countInt = setInterval(() => { 
             if (isPaused) return;
             count--; 
             if (count > 0) announcer.innerText = count; 
-            else { 
-                clearInterval(countInt); 
-                announcer.style.display = 'none'; 
-                gameActive = true; 
-                startRound(1); 
-                mainTimer(); 
-            } 
+            else { clearInterval(countInt); announcer.style.display = 'none'; startGameLogic(); } 
         }, 1000);
     }
 
+    function togglePause() {
+        if (!gameActive && songElapsed === 0) return;
+        isPaused = !isPaused;
+        const overlay = document.getElementById('pause-overlay');
+        if (isPaused) {
+            overlay.style.display = 'flex';
+            bgMusic.pause();
+            document.querySelectorAll('.target').forEach(t => t.getAnimations().forEach(a => a.pause()));
+        } else {
+            overlay.style.display = 'none';
+            bgMusic.play();
+            document.querySelectorAll('.target').forEach(t => t.getAnimations().forEach(a => a.play()));
+        }
+    }
+
+    function startGameLogic() { 
+        gameActive = true; 
+        startRound(1); 
+        mainTimer(); 
+    }
+
     function slash(el) {
-        if (el.dataset.hit === "true") return;
-        el.dataset.hit = "true";
-        const rect = el.getBoundingClientRect();
-        createExplosion(rect.left + rect.width/2, rect.top + rect.height/2);
-        playSlashSound();
+        if (isPaused || el.dataset.hit === "true") return; el.dataset.hit = "true";
+        const rect = el.getBoundingClientRect(); createExplosion(rect.left + rect.width/2, rect.top + rect.height/2);
         
-        const charName = el.dataset.name;
-        hitCount[charName] = (hitCount[charName] || 0) + 1;
+        // Use the sword.mp3 file
+        if (!bgMusic.muted) {
+            slashSound.currentTime = 0;
+            slashSound.play();
+        }
+
+        const charName = el.dataset.name; hitCount[charName] = (hitCount[charName] || 0) + 1;
         if (charName === selectedSlasher) selfKills++;
-        
         const char = characters.find(c => c.name === charName);
-        score += char && char.bonus ? 3 : 1;
-        document.getElementById('score-board').innerText = score;
+        score += char && char.bonus ? 3 : 1; document.getElementById('score-board').innerText = score;
         el.remove();
-    }
-
-    function startRound(num) { 
-        const spawnRate = 1250 - (num * 300); 
-        const ann = document.getElementById('round-announcer'); 
-        ann.innerText = `ROUND ${num}`; 
-        ann.style.display = 'block'; 
-        setTimeout(() => ann.style.display = 'none', 1500); 
-        
-        const loop = () => {
-            if (!gameActive) return;
-            if (!isPaused) createTarget(4500 - (num * 1000));
-            spawnLoopTimeout = setTimeout(loop, spawnRate);
-        };
-        loop();
-    }
-
-    function createTarget(duration) {
-        const char = characters[Math.floor(Math.random() * characters.length)];
-        const t = document.createElement('div');
-        t.className = 'target';
-        t.dataset.name = char.name;
-        t.style.backgroundImage = `url('${char.url}')`;
-        
-        t.onmousedown = () => slash(t);
-        t.ontouchstart = (e) => { e.preventDefault(); slash(t); };
-
-        const sides = [{x:Math.random()*80,y:-15},{x:105,y:Math.random()*80},{x:Math.random()*80,y:105},{x:-15,y:Math.random()*80}];
-        const s = sides[Math.floor(Math.random()*4)];
-        t.style.left = s.x+'%'; t.style.top = s.y+'%';
-        document.getElementById('game-container').appendChild(t);
-        
-        const anim = t.animate([
-            {left:s.x+'%', top:s.y+'%'}, 
-            {left:Math.random()*100+'%', top:Math.random()*100+'%'}
-        ], {duration: duration});
-        
-        anim.onfinish = () => { if(t.parentNode) t.remove(); };
     }
 
     function mainTimer() { 
@@ -284,12 +195,41 @@
         }, 1000); 
     }
 
-    function finishGame() {
-        gameActive = false;
-        clearInterval(mainInterval);
-        clearTimeout(spawnLoopTimeout);
-        bgMusic.pause();
-        showEndScreen();
+    function startRound(num) { 
+        spawnRate = 1250 - (num * 300); 
+        moveDuration = 4500 - (num * 1000); 
+        const ann = document.getElementById('round-announcer'); 
+        ann.innerText = `ROUND ${num}`; 
+        ann.style.display = 'block'; 
+        setTimeout(() => ann.style.display = 'none', 1500); 
+        spawnLoop(); 
+    }
+
+    function spawnLoop() { 
+        if (!gameActive) return; 
+        if (!isPaused) createTarget(); 
+        setTimeout(spawnLoop, spawnRate); 
+    }
+
+    function finishGame() { gameActive = false; clearInterval(mainInterval); bgMusic.pause(); showEndScreen(); }
+
+    function createTarget() {
+        const char = characters[Math.floor(Math.random() * characters.length)]; const t = document.createElement('div');
+        t.className = 'target'; t.dataset.name = char.name; t.style.backgroundImage = `url('${char.url}')`;
+        t.onmousedown = () => slash(t); t.ontouchstart = (e) => { e.preventDefault(); slash(t); };
+        const sides = [{x:Math.random()*80,y:-15},{x:105,y:Math.random()*80},{x:Math.random()*80,y:105},{x:-15,y:Math.random()*80}];
+        const s = sides[Math.floor(Math.random()*4)]; t.style.left = s.x+'%'; t.style.top = s.y+'%';
+        document.getElementById('game-container').appendChild(t);
+        t.animate([{left:s.x+'%', top:s.y+'%'}, {left:Math.random()*100+'%', top:Math.random()*100+'%'}], {duration:moveDuration}).onfinish = () => { if(t.parentNode) t.remove(); };
+    }
+
+    function createExplosion(x, y) {
+        for (let i = 0; i < 15; i++) {
+            const p = document.createElement('div'); p.className = 'particle';
+            p.style.left = x + 'px'; p.style.top = y + 'px'; document.body.appendChild(p);
+            const angle = Math.random() * Math.PI * 2, vel = Math.random() * 10 + 5;
+            p.animate([{transform: 'translate(0,0) scale(1)', opacity: 1}, {transform: `translate(${Math.cos(angle)*vel*20}px, ${Math.sin(angle)*vel*20}px) scale(0)`, opacity: 0}], {duration: 600}).onfinish = () => p.remove();
+        }
     }
 
     function showEndScreen() {
@@ -298,57 +238,35 @@
         document.getElementById('end-screen').style.display = 'flex';
         let mostHitName = Object.keys(hitCount).reduce((a, b) => hitCount[a] > hitCount[b] ? a : b, characters[0].name);
         document.getElementById('most-hit-img').style.backgroundImage = `url('${characters.find(c => c.name === mostHitName).url}')`;
-        document.getElementById('most-hit-text').innerHTML = `I Guess You Really Like This Person..<br>You hit them ${hitCount[mostHitName] || 0} times!`;
-        document.getElementById('self-kill-text').innerHTML = `You also Killed Yourself ${selfKills} times <div class="laugh-row">ha ha ha</div>`;
+        document.getElementById('most-hit-text').innerHTML = `I Guess You Really Like This one..<br>You hit him ${hitCount[mostHitName] || 0} times!`;
+        document.getElementById('self-kill-text').innerText = `You also Killed Yourself ${selfKills} times ha ha ha`;
         document.getElementById('final-total-score').innerText = `Total Score: ${score}`;
-    }
-
-    function playSlashSound() {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(450, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.5, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-    }
-
-    function createExplosion(x, y) {
-        for (let i = 0; i < 15; i++) {
-            const p = document.createElement('div');
-            p.style.cssText = `position:absolute; width:8px; height:8px; background:#f00; left:${x}px; top:${y}px; pointer-events:none; z-index:100;`;
-            document.body.appendChild(p);
-            const angle = Math.random() * Math.PI * 2, vel = Math.random() * 10 + 5;
-            p.animate([{transform: 'translate(0,0) scale(1)', opacity: 1}, {transform: `translate(${Math.cos(angle)*vel*20}px, ${Math.sin(angle)*vel*20}px) scale(0)`, opacity: 0}], {duration: 600}).onfinish = () => p.remove();
-        }
-    }
-
-    function togglePause() {
-        isPaused = !isPaused;
-        if (isPaused) {
-            bgMusic.pause();
-            document.querySelectorAll('.target').forEach(t => t.getAnimations().forEach(a => a.pause()));
-        } else {
-            bgMusic.play();
-            document.querySelectorAll('.target').forEach(t => t.getAnimations().forEach(a => a.play()));
-        }
+        document.getElementById('whatsapp-share').onclick = () => { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`I scored ${score} points on BX SLASHERS! 🔪 I even killed myself ${selfKills} times! Beat me here: ${gameUrl}`)}`, '_blank'); };
     }
 
     function renderCharacterRow() {
-        const row = document.getElementById('character-row');
-        row.innerHTML = '';
-        characters.forEach((char) => {
-            const div = document.createElement('div');
-            div.className = 'char-preview' + (char.name === selectedSlasher ? ' selected' : '');
+        const row = document.getElementById('character-row'); row.innerHTML = '';
+        characters.forEach((char, idx) => {
+            const div = document.createElement('div'); div.className = 'char-preview' + (char.name === selectedSlasher ? ' selected' : '');
             div.style.backgroundImage = `url('${char.url}')`;
             div.onclick = () => { selectedSlasher = char.name; renderCharacterRow(); };
-            row.appendChild(div);
+            const del = document.createElement('button'); del.className = 'delete-btn'; del.innerText = '×';
+            del.onclick = (e) => { e.stopPropagation(); characters.splice(idx,1); renderCharacterRow(); };
+            div.appendChild(del); row.appendChild(div);
         });
+    }
+
+    function saveNewCharacter() {
+        const name = document.getElementById('new-name').value; const file = document.getElementById('new-file').files[0];
+        if(!name || !file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => { characters.push({name: name, url: e.target.result, bonus: false}); renderCharacterRow(); document.getElementById('upload-modal').style.display = 'none'; };
+        reader.readAsDataURL(file);
     }
 
     window.onload = renderCharacterRow;
     document.getElementById('start-button').onclick = initGame;
-    document.getElementById('mute-btn').onclick = () => { bgMusic.muted = !bgMusic.muted; };
+    document.getElementById('mute-btn').onclick = () => { bgMusic.muted = !bgMusic.muted; document.getElementById('mute-btn').innerText = bgMusic.muted ? "🔊" : "🔇"; };
     document.getElementById('pause-btn').onclick = togglePause;
     document.getElementById('early-end-btn').onclick = finishGame;
 </script>
