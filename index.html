@@ -2,7 +2,7 @@
 <html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>BX SLASHERS</title>
     <link rel="icon" type="image/png" href="icon.png">
 
@@ -39,39 +39,49 @@
         @media (max-width: 768px) {
             #main-title { font-size: 50px; text-shadow: 3px 3px #fff; }
             #sub-title { font-size: 20px; margin: 10px 0; }
-            #character-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-height: 45vh; overflow-y: auto; justify-items: center; overflow-x: hidden; }
-            .char-preview { width: 70px; height: 70px; }
-            .main-btn { padding: 22px 35px; font-size: 28px; width: 85%; border-radius: 20px; }
+            #character-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-height: 40vh; overflow-y: auto; justify-items: center; overflow-x: hidden; }
+            .char-preview { width: 60px; height: 60px; }
             
-            /* Shrink Side Buttons to 50% */
-            #mute-btn { width: 40px; height: 40px; font-size: 20px; top: 10px; right: 10px; }
-            #pause-btn { width: 40px; height: 40px; font-size: 20px; top: 10px; right: 60px; }
-            #early-end-btn { font-size: 10px; padding: 8px 12px; top: 10px; left: 10px; }
+            /* UI Buttons 50% shrink */
+            #mute-btn { width: 35px; height: 35px; font-size: 16px; top: 10px; right: 10px; }
+            #pause-btn { width: 35px; height: 35px; font-size: 16px; top: 10px; right: 55px; }
+            #early-end-btn { font-size: 9px; padding: 5px 10px; top: 10px; left: 10px; width: auto; height: auto; }
             
-            /* Shrink Target Circles to ~75% */
-            .target { width: 85px; height: 85px; }
-            #round-announcer { font-size: 85px; }
-
-            /* Position UI boxes in bottom corners and shrink by 50% */
-            #ui-layer { bottom: 15px !important; justify-content: space-between !important; padding: 0 15px; box-sizing: border-box; }
-            .stat-box { font-size: 12px !important; padding: 5px 10px !important; border: 1px solid #ff0000 !important; }
+            /* Target circles ~75% shrink */
+            .target { width: 85px; height: 85px; border-width: 2px; }
+            
+            /* Bottom UI (Score/Time) position fix */
+            #ui-layer { 
+                bottom: 80px !important; /* Raised higher to avoid browser UI overlap */
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-between !important;
+                padding: 0 20px !important;
+                pointer-events: none;
+            }
+            .stat-box { 
+                font-size: 12px !important; 
+                padding: 5px 10px !important; 
+                border-radius: 8px !important;
+                background: rgba(0,0,0,0.85);
+            }
         }
 
         .delete-btn { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 13px; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; }
-        .stat-box { font-size: 20px; background: rgba(0,0,0,0.8); padding: 10px 15px; border-radius: 15px; border: 2px solid #ff0000; }
+        .stat-box { font-size: 20px; background: rgba(0,0,0,0.8); padding: 10px 15px; border-radius: 15px; border: 2px solid #ff0000; pointer-events: auto; }
         #end-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 4000; }
         #most-hit-img { width: 150px; height: 150px; border-radius: 50%; border: 6px solid #ff0000; margin: 15px 0; background-size: cover; }
         .particle { position: absolute; width: 8px; height: 8px; background: #ff0000; pointer-events: none; z-index: 60; }
         
-        #pause-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 5000; font-size: 50px; color: white; flex-direction: column; }
+        #pause-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 5000; font-size: 40px; color: white; flex-direction: column; }
     </style>
 </head>
 <body>
 
-<audio id="bg-music" src="Final Girl Glitch.mp3" preload="auto"></audio>
+<audio id="bg-music" src="Final Girl Glitch.mp3" preload="auto" loop></audio>
 <div id="fallback-bg"></div>
 
-<button id="mute-btn" class="side-btn" style="display:none;">🔇</button>
+<button id="mute-btn" class="side-btn" style="display:none;">🔊</button>
 <button id="pause-btn" class="side-btn" style="display:none;">⏸</button>
 <button id="early-end-btn" class="side-btn" style="display:none;">END GAME</button>
 
@@ -99,7 +109,7 @@
 </div>
 
 <div id="game-container">
-    <div id="ui-layer" style="position: absolute; bottom: 35px; width: 100%; display: flex; justify-content: space-around; pointer-events: none;">
+    <div id="ui-layer" style="position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: space-around; z-index: 100;">
         <div class="stat-box">Score: <span id="score-board">0</span></div>
         <div class="stat-box">Time: <span id="timer">60</span></div>
     </div>
@@ -123,6 +133,13 @@
     let spawnRate = 1200, moveDuration = 4000, mainInterval;
     const bgMusic = document.getElementById('bg-music');
 
+    // Auto-Pause when leaving the tab/app
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden && gameActive && !isPaused) {
+            togglePause();
+        }
+    });
+
     async function initGame() {
         bgMusic.currentTime = 0; 
         bgMusic.play().catch(e => console.log("Audio blocked"));
@@ -145,7 +162,7 @@
     }
 
     function togglePause() {
-        if (!gameActive && songElapsed === 0) return; // Prevent pause during initial 3s countdown if desired
+        if (!gameActive && songElapsed === 0) return; 
         isPaused = !isPaused;
         const overlay = document.getElementById('pause-overlay');
         if (isPaused) {
@@ -154,7 +171,7 @@
             document.querySelectorAll('.target').forEach(t => t.getAnimations().forEach(a => a.pause()));
         } else {
             overlay.style.display = 'none';
-            bgMusic.play();
+            if (!bgMusic.muted) bgMusic.play();
             document.querySelectorAll('.target').forEach(t => t.getAnimations().forEach(a => a.play()));
         }
     }
@@ -181,7 +198,7 @@
         const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
         osc.type = 'sawtooth'; osc.frequency.setValueAtTime(450, audioCtx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
-        gain.gain.setValueAtTime(1.0, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.5, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + 0.1);
     }
