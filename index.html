@@ -13,7 +13,6 @@
             text-align: center; touch-action: none; 
         }
         
-        /* רקע דסקטופ */
         #fallback-bg { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: url('bg.png') no-repeat center top; 
@@ -31,6 +30,8 @@
         .char-preview.selected { border: 5px solid #00ff00 !important; transform: scale(1.2); box-shadow: 0 0 20px #00ff00; }
         
         .main-btn { padding: 18px 45px; font-size: 26px; cursor: pointer; color: white; border: none; border-radius: 15px; font-weight: bold; transition: 0.3s; margin: 10px; background: #ff0000; box-shadow: 0 0 25px #ff0000; text-transform: uppercase; }
+        /* עיצוב כפתור כבוי */
+        .main-btn:disabled { background: #555; box-shadow: none; cursor: not-allowed; opacity: 0.6; }
         
         .side-btn { position: fixed; z-index: 3000; background: rgba(0,0,0,0.7); border: 2px solid white; color: white; cursor: pointer; font-weight: bold; }
         #mute-btn { top: 20px; right: 20px; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; }
@@ -39,36 +40,11 @@
         
         .target { position: absolute; width: 115px; height: 115px; border-radius: 50%; background-size: cover; border: 4px solid white; z-index: 20; }
         #round-announcer { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); font-size: 130px; color: #ff0000; z-index: 500; display: none; text-shadow: 0 0 30px black; font-weight: bold; width: 100%; pointer-events: none; }
+        .stat-box { font-size: 20px; background: rgba(0,0,0,0.85); padding: 10px 20px; border-radius: 15px; border: 2px solid #ff0000; min-width: 120px; pointer-events: auto; }
+        #ui-layer { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: space-between; padding: 0 40px; box-sizing: border-box; pointer-events: none; z-index: 100; }
 
-        /* UI דסקטופ בפינות */
-        #ui-layer { 
-            position: absolute; 
-            bottom: 40px; 
-            width: 100%; 
-            display: flex; 
-            justify-content: space-between; 
-            padding: 0 40px; 
-            box-sizing: border-box;
-            pointer-events: none; 
-            z-index: 100; 
-        }
-
-        .stat-box { 
-            font-size: 20px; 
-            background: rgba(0,0,0,0.85); 
-            padding: 10px 20px; 
-            border-radius: 15px; 
-            border: 2px solid #ff0000; 
-            min-width: 120px;
-            pointer-events: auto;
-        }
-
-        /* התאמות מובייל */
         @media (max-width: 768px) {
-            body { 
-                background: url('bg_mobile.jpg') no-repeat center center fixed !important; 
-                background-size: cover !important; 
-            }
+            body { background: url('bg_mobile.jpg') no-repeat center center fixed !important; background-size: cover !important; }
             #fallback-bg { display: none !important; }
             #main-title { font-size: 50px; text-shadow: 3px 3px #fff; }
             #sub-title { font-size: 20px; margin: 10px 0; }
@@ -78,18 +54,8 @@
             #early-end-btn { font-size: 9px; padding: 5px 10px; top: 10px; left: 10px; }
             .target { width: 85px; height: 85px; }
             #round-announcer { font-size: 90px; }
-            
-            #ui-layer { 
-                bottom: 115px !important; 
-                justify-content: center !important; 
-                gap: 15px !important;
-                padding: 0 !important;
-            }
-            .stat-box { 
-                font-size: 14px !important; 
-                padding: 8px 12px !important; 
-                min-width: 100px;
-            }
+            #ui-layer { bottom: 115px !important; justify-content: center !important; gap: 15px !important; padding: 0 !important; }
+            .stat-box { font-size: 14px !important; min-width: 100px; }
         }
 
         .delete-btn { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 13px; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; }
@@ -97,21 +63,13 @@
         #most-hit-img { width: 150px; height: 150px; border-radius: 50%; border: 6px solid #ff0000; margin: 15px 0; background-size: cover; }
         .particle { position: absolute; width: 8px; height: 8px; background: #ff0000; pointer-events: none; z-index: 60; }
         #pause-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 5000; font-size: 40px; color: white; flex-direction: column; }
-        
-        .laugh-row {
-            display: block;
-            margin-top: 10px;
-            font-size: 26px;
-            color: #ff0000;
-            text-shadow: 2px 2px #000;
-        }
+        .laugh-row { display: block; margin-top: 10px; font-size: 26px; color: #ff0000; text-shadow: 2px 2px #000; }
     </style>
 </head>
 <body id="body-el">
 
 <audio id="bg-music" src="Final Girl Glitch.mp3" preload="auto" loop></audio>
 <audio id="slash-sound" src="sword.mp3" preload="auto"></audio>
-
 <div id="fallback-bg"></div>
 
 <button id="mute-btn" class="side-btn" style="display:none;">🔊</button>
@@ -129,7 +87,7 @@
     <h1 id="main-title">BX SLASHERS</h1>
     <h2 id="sub-title">CHOOSE YOUR SLASHER</h2>
     <div id="character-row"></div>
-    <button id="start-button" class="main-btn">START GAME</button>
+    <button id="start-button" class="main-btn" disabled>START GAME</button>
     <button onclick="document.getElementById('upload-modal').style.display='block'" style="background:none; border:none; color:#aaa; text-decoration:underline; cursor:pointer; font-size: 17px; margin-top: 10px;">+ Add Slasher</button>
 </div>
 
@@ -166,7 +124,9 @@
     const slashSound = document.getElementById('slash-sound');
     
     let characters = [{name:'ella', url:'ella.png', bonus:true}, {name:'amir', url:'amir.png', bonus:false}, {name:'elad', url:'elad.png', bonus:true}, {name:'shay', url:'shay.png', bonus:false}, {name:'achinoam', url:'achinoam.png', bonus:false}, {name:'einat', url:'einat.png', bonus:false}, {name:'doron', url:'doron.png', bonus:true}, {name:'hadas', url:'hadas.png', bonus:false}, {name:'adi', url:'adi.png', bonus:true}, {name:'idan', url:'idan.png', bonus:true}, {name:'shoval', url:'shoval.png', bonus:false}, {name:'stas', url:'stas.png', bonus:false}, {name:'vik', url:'vik.png', bonus:false}, {name:'vivi', url:'vivi.png', bonus:false}];
-    let hitCount = {}; let score = 0, songElapsed = 0, gameActive = false, isPaused = false, selectedSlasher = 'amir', selfKills = 0;
+    
+    // שינוי: selectedSlasher מתחיל כ-null
+    let hitCount = {}; let score = 0, songElapsed = 0, gameActive = false, isPaused = false, selectedSlasher = null, selfKills = 0;
     let spawnRate = 1200, moveDuration = 4000, mainInterval;
 
     function unlockAudio() {
@@ -184,6 +144,7 @@
     }
 
     async function initGame() {
+        if (!selectedSlasher) return; // אבטחה למקרה שהכפתור נלחץ ללא דמות
         unlockAudio();
         bgMusic.currentTime = 0; 
         bgMusic.play().catch(e => console.log("Audio blocked"));
@@ -229,9 +190,7 @@
     function slash(el) {
         if (isPaused || el.dataset.hit === "true") return; el.dataset.hit = "true";
         const rect = el.getBoundingClientRect(); createExplosion(rect.left + rect.width/2, rect.top + rect.height/2);
-        
         playSlash();
-
         const charName = el.dataset.name; hitCount[charName] = (hitCount[charName] || 0) + 1;
         if (charName === selectedSlasher) selfKills++;
         const char = characters.find(c => c.name === charName);
@@ -293,7 +252,7 @@
         document.getElementById('end-screen').style.display = 'flex';
         let mostHitName = Object.keys(hitCount).reduce((a, b) => hitCount[a] > hitCount[b] ? a : b, characters[0].name);
         document.getElementById('most-hit-img').style.backgroundImage = `url('${characters.find(c => c.name === mostHitName).url}')`;
-        document.getElementById('most-hit-text').innerHTML = `I Guess You Really Like This Person..<br>You hit them ${hitCount[mostHitName] || 0} times!`;
+        document.getElementById('most-hit-text').innerHTML = `I Guess You Really Like This Person..<br>You hit him ${hitCount[mostHitName] || 0} times!`;
         document.getElementById('self-kill-text').innerHTML = `You also Killed Yourself ${selfKills} times <div class="laugh-row">ha ha ha</div>`;
         document.getElementById('final-total-score').innerText = `Total Score: ${score}`;
         document.getElementById('whatsapp-share').onclick = () => { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`I scored ${score} points on BX SLASHERS! 🔪 I even killed myself ${selfKills} times! Beat me here: ${gameUrl}`)}`, '_blank'); };
@@ -308,10 +267,20 @@
                 unlockAudio(); 
                 playSlash();   
                 selectedSlasher = char.name; 
+                // שינוי: הפעלת הכפתור לאחר בחירה
+                document.getElementById('start-button').disabled = false;
                 renderCharacterRow(); 
             };
             const del = document.createElement('button'); del.className = 'delete-btn'; del.innerText = '×';
-            del.onclick = (e) => { e.stopPropagation(); characters.splice(idx,1); renderCharacterRow(); };
+            del.onclick = (e) => { 
+                e.stopPropagation(); 
+                if (selectedSlasher === characters[idx].name) {
+                    selectedSlasher = null;
+                    document.getElementById('start-button').disabled = true;
+                }
+                characters.splice(idx,1); 
+                renderCharacterRow(); 
+            };
             div.appendChild(del); row.appendChild(div);
         });
     }
