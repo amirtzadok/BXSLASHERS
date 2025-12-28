@@ -37,38 +37,32 @@
 
         /* Mobile Adjustments */
         @media (max-width: 768px) {
+            #fallback-bg { background-image: url('bg_mobile.jpg'); }
             #main-title { font-size: 50px; text-shadow: 3px 3px #fff; }
             #sub-title { font-size: 20px; margin: 10px 0; }
             #character-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-height: 40vh; overflow-y: auto; justify-items: center; overflow-x: hidden; }
-            .char-preview { width: 60px; height: 60px; }
             
-            /* UI Buttons 50% shrink */
             #mute-btn { width: 35px; height: 35px; font-size: 16px; top: 10px; right: 10px; }
             #pause-btn { width: 35px; height: 35px; font-size: 16px; top: 10px; right: 55px; }
-            #early-end-btn { font-size: 9px; padding: 5px 10px; top: 10px; left: 10px; width: auto; height: auto; }
+            #early-end-btn { font-size: 9px; padding: 5px 10px; top: 10px; left: 10px; }
             
-            /* Target circles ~75% shrink */
-            .target { width: 85px; height: 85px; border-width: 2px; }
-            
-            /* Bottom UI (Score/Time) position fix */
+            .target { width: 85px; height: 85px; }
+
+            /* Moving Score/Time UI buttons much higher to avoid browser overlay */
             #ui-layer { 
-                bottom: 80px !important; /* Raised higher to avoid browser UI overlap */
-                display: flex !important;
-                flex-direction: row !important;
-                justify-content: space-between !important;
-                padding: 0 20px !important;
-                pointer-events: none;
+                bottom: 150px !important; 
+                padding: 0 25px !important;
             }
             .stat-box { 
-                font-size: 12px !important; 
-                padding: 5px 10px !important; 
-                border-radius: 8px !important;
-                background: rgba(0,0,0,0.85);
+                font-size: 14px !important; 
+                padding: 8px 12px !important; 
+                border: 2px solid #ff0000 !important;
+                background: rgba(0,0,0,0.9);
             }
         }
 
         .delete-btn { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 13px; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; }
-        .stat-box { font-size: 20px; background: rgba(0,0,0,0.8); padding: 10px 15px; border-radius: 15px; border: 2px solid #ff0000; pointer-events: auto; }
+        .stat-box { font-size: 20px; background: rgba(0,0,0,0.8); padding: 10px 15px; border-radius: 15px; border: 2px solid #ff0000; }
         #end-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 4000; }
         #most-hit-img { width: 150px; height: 150px; border-radius: 50%; border: 6px solid #ff0000; margin: 15px 0; background-size: cover; }
         .particle { position: absolute; width: 8px; height: 8px; background: #ff0000; pointer-events: none; z-index: 60; }
@@ -76,7 +70,7 @@
         #pause-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 5000; font-size: 40px; color: white; flex-direction: column; }
     </style>
 </head>
-<body>
+<body id="body-el">
 
 <audio id="bg-music" src="Final Girl Glitch.mp3" preload="auto" loop></audio>
 <div id="fallback-bg"></div>
@@ -109,7 +103,7 @@
 </div>
 
 <div id="game-container">
-    <div id="ui-layer" style="position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: space-around; z-index: 100;">
+    <div id="ui-layer" style="position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: space-around; pointer-events: none;">
         <div class="stat-box">Score: <span id="score-board">0</span></div>
         <div class="stat-box">Time: <span id="timer">60</span></div>
     </div>
@@ -133,17 +127,28 @@
     let spawnRate = 1200, moveDuration = 4000, mainInterval;
     const bgMusic = document.getElementById('bg-music');
 
-    // Auto-Pause when leaving the tab/app
-    document.addEventListener("visibilitychange", () => {
-        if (document.hidden && gameActive && !isPaused) {
+    // Mobile Double Tap to Pause
+    let lastTap = 0;
+    document.getElementById('body-el').addEventListener('touchstart', (e) => {
+        if (window.innerWidth > 768 || !gameActive) return;
+        // Only trigger if clicking the empty background (not a target/button)
+        if (e.target.id !== 'body-el' && e.target.id !== 'game-container' && e.target.id !== 'fallback-bg') return;
+        
+        const now = Date.now();
+        if (now - lastTap < 300) {
             togglePause();
         }
+        lastTap = now;
+    });
+
+    // Auto-Pause when leaving tab
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden && gameActive && !isPaused) togglePause();
     });
 
     async function initGame() {
         bgMusic.currentTime = 0; 
         bgMusic.play().catch(e => console.log("Audio blocked"));
-        
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
         document.getElementById('mute-btn').style.display = 'block';
@@ -162,7 +167,7 @@
     }
 
     function togglePause() {
-        if (!gameActive && songElapsed === 0) return; 
+        if (!gameActive && songElapsed === 0) return;
         isPaused = !isPaused;
         const overlay = document.getElementById('pause-overlay');
         if (isPaused) {
@@ -176,11 +181,7 @@
         }
     }
 
-    function startGameLogic() { 
-        gameActive = true; 
-        startRound(1); 
-        mainTimer(); 
-    }
+    function startGameLogic() { gameActive = true; startRound(1); mainTimer(); }
 
     function slash(el) {
         if (isPaused || el.dataset.hit === "true") return; el.dataset.hit = "true";
@@ -224,11 +225,7 @@
         spawnLoop(); 
     }
 
-    function spawnLoop() { 
-        if (!gameActive) return; 
-        if (!isPaused) createTarget(); 
-        setTimeout(spawnLoop, spawnRate); 
-    }
+    function spawnLoop() { if (!gameActive) return; if (!isPaused) createTarget(); setTimeout(spawnLoop, spawnRate); }
 
     function finishGame() { gameActive = false; clearInterval(mainInterval); bgMusic.pause(); showEndScreen(); }
 
