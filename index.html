@@ -160,7 +160,7 @@
     const bgMusic = document.getElementById('bg-music');
     const slashSound = document.getElementById('slash-sound');
     
-    const defaultCharacters = [{name:'ella', url:'ella.png', bonus:true, isDefault: true}, {name:'amir', url:'amir.png', bonus:false, isDefault: true}, {name:'elad', url:'elad.png', bonus:true, isDefault: true}, {name:'shay', url:'shay.png', bonus:false, isDefault: true}, {name:'achinoam', url:'achinoam.png', bonus:false, isDefault: true}, {name:'einat', url:'einat.png', bonus:false, isDefault: true}, {name:'doron', url:'doron.png', bonus:true, isDefault: true}, {name:'hadas', url:'hadas.png', bonus:false, isDefault: true}, {name:'adi', url:'adi.png', bonus:true, isDefault: true}, {name:'idan', url:'idan.png', bonus:true, isDefault: true}, {name:'shoval', url:'shoval.png', bonus:false, isDefault: true}, {name:'stas', url:'stas.png', bonus:false, isDefault: true}, {name:'vik', url:'vik.png', bonus:false, isDefault: true}, {name:'vivi', url:'vivi.png', bonus:false, isDefault: true}];
+    const defaultCharacters = [{name:'keren', url:'keren.png', bonus:false, isDefault: true}, {name:'ella', url:'ella.png', bonus:true, isDefault: true}, {name:'amir', url:'amir.png', bonus:false, isDefault: true}, {name:'elad', url:'elad.png', bonus:true, isDefault: true}, {name:'shay', url:'shay.png', bonus:false, isDefault: true}, {name:'achinoam', url:'achinoam.png', bonus:false, isDefault: true}, {name:'einat', url:'einat.png', bonus:false, isDefault: true}, {name:'doron', url:'doron.png', bonus:true, isDefault: true}, {name:'hadas', url:'hadas.png', bonus:false, isDefault: true}, {name:'adi', url:'adi.png', bonus:true, isDefault: true}, {name:'idan', url:'idan.png', bonus:true, isDefault: true}, {name:'shoval', url:'shoval.png', bonus:false, isDefault: true}, {name:'stas', url:'stas.png', bonus:false, isDefault: true}, {name:'vik', url:'vik.png', bonus:false, isDefault: true}, {name:'vivi', url:'vivi.png', bonus:false, isDefault: true}];
     
     let customCharacters = JSON.parse(localStorage.getItem('bx_custom_characters')) || [];
     let characters = [...defaultCharacters, ...customCharacters];
@@ -179,8 +179,6 @@
         slashSound.currentTime = 0;
         slashSound.play().catch(e => console.log("Sound error: ", e));
     }
-
-    // הוסר המאזין ל-dblclick כדי לבטל את העצירה בלחיצה כפולה
 
     async function initGame() {
         if (!selectedSlasher) return;
