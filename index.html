@@ -39,8 +39,32 @@
         .main-btn:disabled { background: #555; box-shadow: none; cursor: not-allowed; opacity: 0.6; }
         
         .side-btn { position: fixed; z-index: 3000; background: rgba(0,0,0,0.7); border: 2px solid white; color: white; cursor: pointer; font-weight: bold; }
-        #mute-btn { top: 20px; right: 20px; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; }
-        #pause-btn { top: 20px; right: 90px; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; display: none; }
+        
+        /* קונטיינר עוצמת קול אנכי */
+        #volume-container { 
+            position: fixed; top: 20px; right: 20px; z-index: 3000; 
+            display: none; flex-direction: column-reverse; align-items: center; gap: 15px; 
+            background: rgba(0,0,0,0.7); padding: 15px 10px; border-radius: 30px; border: 2px solid white;
+        }
+
+        /* סליידר אנכי */
+        #volume-slider { 
+            cursor: pointer; 
+            width: 8px; 
+            height: 100px; 
+            accent-color: #ff0000;
+            appearance: slider-vertical; /* תמיכה בדפדפנים ישנים */
+            writing-mode: bt-lr; /* תמיכה ב-Chrome/Safari לסליידר אנכי */
+        }
+
+        /* צבע אייקון לבן */
+        #volume-icon {
+            color: white;
+            font-size: 20px;
+            user-select: none;
+        }
+        
+        #pause-btn { top: 20px; right: 80px; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; display: none; }
         #early-end-btn { top: 20px; left: 20px; border-radius: 10px; padding: 12px 20px; font-size: 15px; display: none; }
         
         .target { position: absolute; width: 115px; height: 115px; border-radius: 50%; background-size: cover; border: 4px solid white; z-index: 20; }
@@ -65,9 +89,13 @@
             #main-title { font-size: 50px; text-shadow: 3px 3px #fff; }
             #sub-title { font-size: 20px; margin: 10px 0; }
             #character-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-height: 40vh; overflow-y: auto; justify-items: center; overflow-x: hidden; }
-            #mute-btn { width: 35px; height: 35px; font-size: 16px; top: 10px; right: 10px; }
-            #pause-btn { width: 35px; height: 35px; font-size: 16px; top: 10px; right: 55px; }
+            
+            #volume-container { top: 10px; right: 10px; padding: 10px 5px; gap: 10px; }
+            #volume-slider { height: 70px; }
+            #volume-icon { font-size: 16px; }
+            #pause-btn { width: 35px; height: 35px; font-size: 16px; top: 10px; right: 60px; }
             #early-end-btn { font-size: 11.25px; padding: 6.25px 12.5px; top: 10px; left: 10px; }
+            
             .target { width: 85px; height: 85px; }
             #round-announcer { font-size: 90px; }
             #ui-layer { bottom: 115px !important; justify-content: center !important; gap: 15px !important; padding: 0 !important; }
@@ -107,7 +135,11 @@
 <audio id="slash-sound" src="sword.mp3" preload="auto"></audio>
 <div id="fallback-bg"></div>
 
-<button id="mute-btn" class="side-btn" style="display:none;">🔊</button>
+<div id="volume-container">
+    <span id="volume-icon">🔊</span>
+    <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="1">
+</div>
+
 <button id="pause-btn" class="side-btn" onclick="togglePause()">⏸</button>
 <button id="early-end-btn" class="side-btn">END GAME</button>
 
@@ -159,6 +191,8 @@
     const gameUrl = "https://amirtzadok.github.io/BXSLASHERS/";
     const bgMusic = document.getElementById('bg-music');
     const slashSound = document.getElementById('slash-sound');
+    const volumeSlider = document.getElementById('volume-slider');
+    const volumeIcon = document.getElementById('volume-icon');
     
     const defaultCharacters = [{name:'keren', url:'keren.png', bonus:false, isDefault: true}, {name:'ella', url:'ella.png', bonus:true, isDefault: true}, {name:'amir', url:'amir.png', bonus:false, isDefault: true}, {name:'elad', url:'elad.png', bonus:true, isDefault: true}, {name:'shay', url:'shay.png', bonus:false, isDefault: true}, {name:'achinoam', url:'achinoam.png', bonus:false, isDefault: true}, {name:'einat', url:'einat.png', bonus:false, isDefault: true}, {name:'doron', url:'doron.png', bonus:true, isDefault: true}, {name:'hadas', url:'hadas.png', bonus:false, isDefault: true}, {name:'adi', url:'adi.png', bonus:true, isDefault: true}, {name:'idan', url:'idan.png', bonus:true, isDefault: true}, {name:'shoval', url:'shoval.png', bonus:false, isDefault: true}, {name:'stas', url:'stas.png', bonus:false, isDefault: true}, {name:'vik', url:'vik.png', bonus:false, isDefault: true}, {name:'vivi', url:'vivi.png', bonus:false, isDefault: true}];
     
@@ -167,6 +201,17 @@
     
     let hitCount = {}; let score = 0, songElapsed = 0, gameActive = false, isPaused = false, selectedSlasher = null, selfKills = 0;
     let spawnRate = 1200, moveDuration = 4000, mainInterval;
+
+    // לוגיקת סליידר הסאונד
+    volumeSlider.addEventListener('input', (e) => {
+        const val = e.target.value;
+        bgMusic.volume = val;
+        slashSound.volume = val;
+        
+        if (val == 0) volumeIcon.innerText = "🔇";
+        else if (val < 0.5) volumeIcon.innerText = "🔉";
+        else volumeIcon.innerText = "🔊";
+    });
 
     function unlockAudio() {
         if (window.AudioContext || window.webkitAudioContext) {
@@ -187,7 +232,7 @@
         bgMusic.play().catch(e => console.log("Audio blocked"));
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
-        document.getElementById('mute-btn').style.display = 'block';
+        document.getElementById('volume-container').style.display = 'flex'; 
         document.getElementById('early-end-btn').style.display = 'none';
         document.getElementById('pause-btn').style.display = 'none';
         const announcer = document.getElementById('round-announcer'); 
@@ -215,7 +260,8 @@
             overlay.style.display = 'flex'; bgMusic.pause();
             document.querySelectorAll('.target').forEach(t => t.getAnimations().forEach(a => a.pause()));
         } else {
-            overlay.style.display = 'none'; if (!bgMusic.muted) bgMusic.play();
+            overlay.style.display = 'none'; 
+            if (bgMusic.volume > 0) bgMusic.play();
             document.querySelectorAll('.target').forEach(t => t.getAnimations().forEach(a => a.play()));
         }
     }
@@ -277,6 +323,7 @@
     function showEndScreen() {
         document.getElementById('game-container').style.display = 'none';
         document.querySelectorAll('.side-btn').forEach(b => b.style.display = 'none');
+        document.getElementById('volume-container').style.display = 'none';
         document.getElementById('end-screen').style.display = 'flex';
         let mostHitName = Object.keys(hitCount).reduce((a, b) => hitCount[a] > hitCount[b] ? a : b, (characters[0] ? characters[0].name : "None"));
         let mostHitChar = characters.find(c => c.name === mostHitName);
@@ -330,7 +377,6 @@
 
     window.onload = renderCharacterRow;
     document.getElementById('start-button').onclick = initGame;
-    document.getElementById('mute-btn').onclick = () => { bgMusic.muted = !bgMusic.muted; document.getElementById('mute-btn').innerText = bgMusic.muted ? "🔇" : "🔊"; };
     document.getElementById('early-end-btn').onclick = finishGame;
 </script>
 </body>
