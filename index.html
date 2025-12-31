@@ -40,28 +40,26 @@
         
         .side-btn { position: fixed; z-index: 3000; background: rgba(0,0,0,0.7); border: 2px solid white; color: white; cursor: pointer; font-weight: bold; }
         
-        /* קונטיינר עוצמת קול אנכי */
         #volume-container { 
             position: fixed; top: 20px; right: 20px; z-index: 3000; 
             display: none; flex-direction: column-reverse; align-items: center; gap: 15px; 
             background: rgba(0,0,0,0.7); padding: 15px 10px; border-radius: 30px; border: 2px solid white;
         }
 
-        /* סליידר אנכי */
         #volume-slider { 
             cursor: pointer; 
             width: 8px; 
             height: 100px; 
             accent-color: #ff0000;
-            appearance: slider-vertical; /* תמיכה בדפדפנים ישנים */
-            writing-mode: bt-lr; /* תמיכה ב-Chrome/Safari לסליידר אנכי */
+            appearance: slider-vertical; 
+            writing-mode: bt-lr; 
         }
 
-        /* צבע אייקון לבן */
         #volume-icon {
             color: white;
             font-size: 20px;
             user-select: none;
+            cursor: pointer; /* Added pointer cursor */
         }
         
         #pause-btn { top: 20px; right: 80px; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; display: none; }
@@ -201,17 +199,32 @@
     
     let hitCount = {}; let score = 0, songElapsed = 0, gameActive = false, isPaused = false, selectedSlasher = null, selfKills = 0;
     let spawnRate = 1200, moveDuration = 4000, mainInterval;
+    let lastVolume = 1; // Store last volume to restore after unmuting
 
-    // לוגיקת סליידר הסאונד
-    volumeSlider.addEventListener('input', (e) => {
-        const val = e.target.value;
+    function updateVolumeUI(val) {
         bgMusic.volume = val;
-        slashSound.volume = val;
-        
+        volumeSlider.value = val;
         if (val == 0) volumeIcon.innerText = "🔇";
         else if (val < 0.5) volumeIcon.innerText = "🔉";
         else volumeIcon.innerText = "🔊";
+    }
+
+    // Logic for volume slider
+    volumeSlider.addEventListener('input', (e) => {
+        const val = e.target.value;
+        updateVolumeUI(val);
+        if (val > 0) lastVolume = val; // Remember current volume if not zero
     });
+
+    // Logic for clicking the icon to toggle mute
+    volumeIcon.onclick = () => {
+        if (bgMusic.volume > 0) {
+            lastVolume = bgMusic.volume; // Remember volume before muting
+            updateVolumeUI(0);
+        } else {
+            updateVolumeUI(lastVolume || 1); // Restore last volume or full
+        }
+    };
 
     function unlockAudio() {
         if (window.AudioContext || window.webkitAudioContext) {
