@@ -59,7 +59,7 @@
             color: white;
             font-size: 20px;
             user-select: none;
-            cursor: pointer; /* Added pointer cursor */
+            cursor: pointer;
         }
         
         #pause-btn { top: 20px; right: 80px; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; display: none; }
@@ -67,8 +67,30 @@
         
         .target { position: absolute; width: 115px; height: 115px; border-radius: 50%; background-size: cover; border: 4px solid white; z-index: 20; }
         #round-announcer { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); font-size: 130px; color: #ff0000; z-index: 500; display: none; text-shadow: 0 0 30px black; font-weight: bold; width: 100%; pointer-events: none; }
-        .stat-box { font-size: 20px; background: rgba(0,0,0,0.85); padding: 10px 20px; border-radius: 15px; border: 2px solid #ff0000; min-width: 120px; pointer-events: auto; }
-        #ui-layer { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: space-between; padding: 0 40px; box-sizing: border-box; pointer-events: none; z-index: 100; }
+        
+        /* Updated: Stroke color changed to white for both desktop and mobile */
+        .stat-box { 
+            font-size: 20px; 
+            background: rgba(0,0,0,0.85); 
+            padding: 10px 20px; 
+            border-radius: 15px; 
+            border: 2px solid #ffffff; /* Changed from red to white */
+            min-width: 120px; 
+            pointer-events: auto; 
+        }
+        
+        #ui-layer { 
+            position: absolute; 
+            bottom: 40px; 
+            width: 100%; 
+            display: flex; 
+            justify-content: flex-start; 
+            gap: 20px; 
+            padding: 0 40px; 
+            box-sizing: border-box; 
+            pointer-events: none; 
+            z-index: 100; 
+        }
 
         .delete-btn { position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 13px; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; z-index: 5; font-weight: bold; }
         #upload-modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; padding: 30px; border-radius: 20px; border: 3px solid #ff0000; display: none; z-index: 5000; width: 80%; max-width: 420px; }
@@ -96,7 +118,13 @@
             
             .target { width: 85px; height: 85px; }
             #round-announcer { font-size: 90px; }
-            #ui-layer { bottom: 115px !important; justify-content: center !important; gap: 15px !important; padding: 0 !important; }
+            
+            #ui-layer { 
+                bottom: 115px !important; 
+                justify-content: center !important; 
+                gap: 15px !important; 
+                padding: 0 !important; 
+            }
             .stat-box { font-size: 14px !important; min-width: 100px; }
             #end-screen-bg { background-image: url('bg_mobile.jpg') !important; }
         }
@@ -199,7 +227,7 @@
     
     let hitCount = {}; let score = 0, songElapsed = 0, gameActive = false, isPaused = false, selectedSlasher = null, selfKills = 0;
     let spawnRate = 1200, moveDuration = 4000, mainInterval;
-    let lastVolume = 1; // Store last volume to restore after unmuting
+    let lastVolume = 1;
 
     function updateVolumeUI(val) {
         bgMusic.volume = val;
@@ -209,20 +237,18 @@
         else volumeIcon.innerText = "🔊";
     }
 
-    // Logic for volume slider
     volumeSlider.addEventListener('input', (e) => {
         const val = e.target.value;
         updateVolumeUI(val);
-        if (val > 0) lastVolume = val; // Remember current volume if not zero
+        if (val > 0) lastVolume = val;
     });
 
-    // Logic for clicking the icon to toggle mute
     volumeIcon.onclick = () => {
         if (bgMusic.volume > 0) {
-            lastVolume = bgMusic.volume; // Remember volume before muting
+            lastVolume = bgMusic.volume;
             updateVolumeUI(0);
         } else {
-            updateVolumeUI(lastVolume || 1); // Restore last volume or full
+            updateVolumeUI(lastVolume || 1);
         }
     };
 
